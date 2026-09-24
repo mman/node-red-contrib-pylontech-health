@@ -1,0 +1,211 @@
+<script type="text/javascript">
+  RED.nodes.registerType('pylontech-health', {
+    category: 'Pylontech',
+    color: '#4fb3bf',
+    defaults: {
+      name: { value: '' },
+      port: { value: '/dev/ttyUSB0', required: true },
+      baud: { value: 115200, validate: RED.validators.number() },
+      wakeup: { value: true },
+      chain: { value: 1, validate: RED.validators.number() },
+      measurementPrefix: { value: 'pylontech' },
+      cellIndexBase: { value: 1 },
+      includeStates: { value: true },
+      readSoh: { value: false },
+      readStat: { value: true },
+      refreshInfoEvery: { value: 60, validate: RED.validators.number() },
+      commandTimeout: { value: 3000, validate: RED.validators.number() },
+      pollTimeout: { value: 30000, validate: RED.validators.number() },
+    },
+    inputs: 1,
+    outputs: 2,
+    outputLabels: ['influx points', 'health model'],
+    icon: 'serial.png',
+    label: function () {
+      return this.name || 'pylontech health ' + (this.port || '/dev/ttyUSB0');
+    },
+    paletteLabel: 'pylontech health',
+  });
+</script>
+
+<script type="text/html" data-template-name="pylontech-health">
+  <div class="form-row">
+    <label for="node-input-name"><i class="fa fa-tag"></i> Name</label>
+    <input type="text" id="node-input-name" placeholder="Name" />
+  </div>
+  <div class="form-row">
+    <label for="node-input-port"><i class="fa fa-random"></i> Serial port</label>
+    <input type="text" id="node-input-port" placeholder="/dev/ttyUSB0" />
+  </div>
+  <div class="form-row">
+    <label for="node-input-baud"><i class="fa fa-tachometer"></i> Baud</label>
+    <input type="number" id="node-input-baud" style="width: 120px" />
+    <input
+      type="checkbox"
+      id="node-input-wakeup"
+      style="display: inline-block; width: auto; margin: 0 4px 0 20px"
+    />
+    <label for="node-input-wakeup" style="width: auto">Send 1200-baud wake sequence on open</label>
+  </div>
+  <div class="form-row">
+    <label for="node-input-chain"><i class="fa fa-link"></i> Chain</label>
+    <input type="number" id="node-input-chain" min="1" style="width: 80px" />
+    <span style="margin-left: 8px; color: #888">tag value for this console cable / stack</span>
+  </div>
+  <hr />
+  <div class="form-row">
+    <label for="node-input-measurementPrefix"
+      ><i class="fa fa-database"></i> Measurement prefix</label
+    >
+    <input type="text" id="node-input-measurementPrefix" placeholder="pylontech" />
+    <span style="margin-left: 8px; color: #888">→ prefix/cell, prefix/battery, prefix/stack</span>
+  </div>
+  <div class="form-row">
+    <label for="node-input-cellIndexBase"><i class="fa fa-list-ol"></i> Cell numbering</label>
+    <select id="node-input-cellIndexBase" style="width: 250px">
+      <option value="1">1-based (Venus OS style, Cell 1…15)</option>
+      <option value="0">0-based (raw Pylontech, Cell 0…14)</option>
+    </select>
+  </div>
+  <div class="form-row">
+    <label>&nbsp;</label>
+    <input
+      type="checkbox"
+      id="node-input-includeStates"
+      style="display: inline-block; width: auto; margin: 0 4px 0 0"
+    />
+    <label for="node-input-includeStates" style="width: auto"
+      >Include state strings (Normal / Dischg …) as fields</label
+    >
+  </div>
+  <div class="form-row">
+    <label>&nbsp;</label>
+    <input
+      type="checkbox"
+      id="node-input-readStat"
+      style="display: inline-block; width: auto; margin: 0 4px 0 0"
+    />
+    <label for="node-input-readStat" style="width: auto"
+      >Read lifetime statistics (<code>stat N</code>: SOH, cycles, counters) with the info
+      refresh</label
+    >
+  </div>
+  <div class="form-row">
+    <label>&nbsp;</label>
+    <input
+      type="checkbox"
+      id="node-input-readSoh"
+      style="display: inline-block; width: auto; margin: 0 4px 0 0"
+    />
+    <label for="node-input-readSoh" style="width: auto"
+      >Read cell state of health (<code>soh N</code>) each poll</label
+    >
+  </div>
+  <hr />
+  <div class="form-row">
+    <label for="node-input-refreshInfoEvery"><i class="fa fa-refresh"></i> Refresh info</label>
+    <input type="number" id="node-input-refreshInfoEvery" min="0" style="width: 80px" />
+    <span style="margin-left: 8px; color: #888"
+      >minutes between <code>info N</code> re-reads (0 = every poll)</span
+    >
+  </div>
+  <div class="form-row">
+    <label for="node-input-commandTimeout"><i class="fa fa-clock-o"></i> Command timeout</label>
+    <input type="number" id="node-input-commandTimeout" min="200" style="width: 100px" />
+    <span style="margin-left: 8px; color: #888">ms of console silence before a command fails</span>
+  </div>
+  <div class="form-row">
+    <label for="node-input-pollTimeout"><i class="fa fa-clock-o"></i> Poll timeout</label>
+    <input type="number" id="node-input-pollTimeout" min="1000" style="width: 100px" />
+    <span style="margin-left: 8px; color: #888">ms for the whole pwr/info/bat cycle</span>
+  </div>
+</script>
+
+<script type="text/html" data-help-name="pylontech-health">
+  <p>
+    Reads per-cell health data from a Pylontech battery stack over the master battery's
+    <b>console</b> port and emits InfluxDB points.
+  </p>
+
+  <h3>Inputs</h3>
+  <dl class="message-properties">
+    <dt class="optional">payload <span class="property-type">any</span></dt>
+    <dd>
+      Any message triggers one poll: <code>pwr</code>, then <code>info N</code> and
+      <code>bat N</code> for every battery present (plus <code>soh N</code> if enabled).
+    </dd>
+    <dt class="optional">refresh <span class="property-type">boolean</span></dt>
+    <dd>
+      Set to <code>true</code> to re-read <code>info N</code> (barcodes, firmware) for every battery
+      on this poll.
+    </dd>
+    <dt class="optional">command <span class="property-type">string</span></dt>
+    <dd>
+      Debug passthrough. Runs a single raw console command (e.g. <code>pwr</code>,
+      <code>bat 2</code>, <code>info</code>) and returns the raw text on output 2 only. Useful for
+      capturing fixtures.
+    </dd>
+  </dl>
+
+  <h3>Outputs</h3>
+  <ol class="node-ports">
+    <li>
+      Influx points
+      <dl class="message-properties">
+        <dt>payload <span class="property-type">array</span></dt>
+        <dd>
+          Array of <code>{ measurement, tags, fields, timestamp }</code> objects, ready for the
+          <b>influxdb batch</b> node of <i>node-red-contrib-influxdb</i>.
+        </dd>
+      </dl>
+    </li>
+    <li>
+      Health model
+      <dl class="message-properties">
+        <dt>payload <span class="property-type">object</span></dt>
+        <dd>
+          Structured reading:
+          <code
+            >{ chain, polledAt, durationMs, batteries: [{ position, info, power, cells, cellStats
+            }], errors }</code
+          >. On failure <code>payload</code> is <code>null</code> and <code>msg.error</code> holds
+          the reason.
+        </dd>
+      </dl>
+    </li>
+  </ol>
+
+  <h3>Measurements</h3>
+  <ul>
+    <li>
+      <code>&lt;prefix&gt;/cell</code> — tags <code>chain</code>, <code>battery</code>,
+      <code>cell</code>, <code>barcode</code>; fields <code>voltage</code> V,
+      <code>current</code> A, <code>temperature</code> °C, <code>soc</code>,
+      <code>coulomb</code> Ah, <code>balancing</code>, <code>soh</code>, state strings.
+    </li>
+    <li>
+      <code>&lt;prefix&gt;/battery</code> — tags <code>chain</code>, <code>battery</code>,
+      <code>barcode</code>; module voltage/current/temperatures, <code>cell_min_voltage</code>,
+      <code>cell_max_voltage</code>, <code>cell_spread</code>, firmware, and from
+      <code>stat N</code>: <code>soh</code>, <code>cycle_count</code>, <code>power_on_hours</code>,
+      event counters.
+    </li>
+    <li>
+      <code>&lt;prefix&gt;/stack</code> — tag <code>chain</code>; counts, aggregate voltage/current,
+      min/max cell voltage, spread, poll duration.
+    </li>
+  </ul>
+
+  <h3>Status</h3>
+  <p>
+    Green <i>ready</i> once the console answers with its <code>pylon&gt;</code> prompt. Blue while
+    polling, red with automatic reconnect when the port cannot be opened or disappears.
+  </p>
+
+  <h3>Details</h3>
+  <p>
+    The port is opened at 1200 baud and the Pylontech wake sequence is sent to switch the console to
+    115200 baud (uncheck if your console is already fixed at 115200). On Venus OS make sure
+    <i>serial-starter</i> ignores the port; see the README.
+  </p>
+</script>
