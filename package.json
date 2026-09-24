@@ -1,0 +1,64 @@
+{
+  "name": "node-red-contrib-pylontech-health",
+  "version": "0.1.0",
+  "description": "Node-RED node that reads per-cell health data from Pylontech batteries over the console port and emits InfluxDB points. Built for Venus OS (Cerbo GX).",
+  "keywords": [
+    "node-red",
+    "pylontech",
+    "battery",
+    "influxdb",
+    "venus-os",
+    "cerbo"
+  ],
+  "author": "Martin Man <mman@martinman.net>",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/mman/node-red-contrib-pylontech-health.git"
+  },
+  "engines": {
+    "node": ">=22"
+  },
+  "main": "dist/pylontech-health.js",
+  "files": [
+    "dist",
+    "examples",
+    "README.md",
+    "LICENSE"
+  ],
+  "node-red": {
+    "version": ">=3.0.0",
+    "nodes": {
+      "pylontech-health": "dist/pylontech-health.js"
+    }
+  },
+  "scripts": {
+    "build": "tsc -p tsconfig.build.json && copyfiles -u 1 src/*.html dist",
+    "clean": "rm -rf dist",
+    "prepare": "npm run build",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "lint": "eslint src test",
+    "format": "prettier --write .",
+    "typecheck": "tsc -p tsconfig.json --noEmit"
+  },
+  "dependencies": {
+    "serialport": "^13.0.0"
+  },
+  "devDependencies": {
+    "@eslint/js": "^9.0.0",
+    "@types/node": "^22.0.0",
+    "@types/node-red": "^1.3.5",
+    "copyfiles": "^2.4.1",
+    "eslint": "^9.0.0",
+    "node-red": "^5.0.0",
+    "node-red-node-test-helper": "^0.3.6",
+    "prettier": "^3.3.0",
+    "typescript": "^5.6.0",
+    "typescript-eslint": "^8.0.0",
+    "vitest": "^5.0.0"
+  },
+  "bin": {
+    "pylontech-health": "dist/cli.js"
+  }
+}
