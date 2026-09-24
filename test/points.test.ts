@@ -38,10 +38,10 @@ describe('cellPoints', () => {
       battery_id: 'B01',
       barcode: 'PPTBH02212345678',
       cell: '1',
-      cell_id: 'B01/C01',
+      cell_id: 'C01',
     });
-    expect(pts[14]!.tags['cell_id']).toBe('B01/C15');
-    expect(pts[15]!.tags['cell_id']).toBe('B02/C01');
+    expect(pts[14]!.tags['cell_id']).toBe('C15');
+    expect(pts[15]!.tags).toMatchObject({ battery_id: 'B02', cell_id: 'C01' });
     expect(p.fields).toMatchObject({
       voltage: 3.305,
       current: -1.876,
@@ -65,7 +65,7 @@ describe('cellPoints', () => {
       battery: '2',
       battery_id: 'B02',
       cell: '0',
-      cell_id: 'B02/C00',
+      cell_id: 'C00',
     });
     expect(p.fields).not.toHaveProperty('base_state');
   });

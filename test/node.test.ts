@@ -159,7 +159,7 @@ describe('pylontech-health node', () => {
         battery: '1',
         battery_id: 'B01',
         cell: '1',
-        cell_id: 'B01/C01',
+        cell_id: 'C01',
         barcode: 'PPTBH02212345678',
       },
     });

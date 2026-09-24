@@ -24,10 +24,9 @@ function firmwareString(b: Battery): string | undefined {
 
 const pad2 = (n: number): string => String(n).padStart(2, '0');
 
-/** Zero-padded identifiers that sort correctly as strings: B01, B01/C07. */
+/** Zero-padded identifiers that sort correctly as strings: B01, C07. Combine them in aliases. */
 export const batteryId = (position: number): string => `B${pad2(position)}`;
-export const cellId = (position: number, cell: number): string =>
-  `${batteryId(position)}/C${pad2(cell)}`;
+export const cellId = (cell: number): string => `C${pad2(cell)}`;
 
 function batteryTags(chain: number, b: Battery): Record<string, string> {
   const tags: Record<string, string> = {
@@ -67,7 +66,7 @@ export function cellPoints(reading: StackReading, opts: PointOptions): InfluxPoi
         tags: {
           ...base,
           cell: String(c.index + opts.cellIndexBase),
-          cell_id: cellId(b.position, c.index + opts.cellIndexBase),
+          cell_id: cellId(c.index + opts.cellIndexBase),
         },
         fields,
         timestamp: reading.polledAt,

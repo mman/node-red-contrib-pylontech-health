@@ -14,8 +14,9 @@ every battery in the stack and produces three measurements:
 | `pylontech/battery` | `chain`, `battery`, `barcode`, `battery_id`                    | `voltage`, `current`, `temperature`, `temp_low`, `temp_high`, `volt_low`, `volt_high`, `soc`, `coulomb`, `mos_temperature`, `cell_min_voltage`, `cell_max_voltage`, `cell_spread`, `cell_min_index`, `cell_max_index`, `cell_count`, `firmware`, `*_state`; from `stat N`: `soh`, `cycle_count`, `power_on_hours`, `shutdown_count`, `reset_count`, `max_charge_volt_diff`, `max_discharge_volt_diff`, `bat_hv_count`, `bat_lv_count`, `bat_ov_count`, `bat_uv_count`, `life_warn_count`, `life_alarm_count` |
 | `pylontech/stack`   | `chain`                                                        | `battery_count`, `cell_count`, `voltage` (avg), `current` (sum), `soc` (min), `cell_min_voltage`, `cell_max_voltage`, `cell_spread`, `temp_min`, `temp_max`, `poll_duration_ms`, `error_count`                                                                                                                                                                                                                                                                                                               |
 
-`battery_id` (`B01`) and `cell_id` (`B01/C07`) are zero-padded copies of the position tags so that
-series sort correctly as strings and make handy Grafana aliases (`ALIAS BY $tag_cell_id`).
+`battery_id` (`B01`) and `cell_id` (`C07`) are zero-padded copies of the position tags so that
+series sort correctly as strings. Combine them in Grafana aliases: `$tag_battery_id/$tag_cell_id`
+gives `B01/C07`, `$tag_barcode/$tag_cell_id` gives `P222061C32221950/C07`.
 All numeric fields are SI (volts, amps, °C, Ah). `chain` / `battery` follow the Venus OS
 "Chain X · Battery Y" naming, `battery` being the 1-based position in the stack (the same `N` you'd
 pass to `bat N`). `barcode` is the battery's serial from `info N`, so a module keeps its history if
@@ -264,8 +265,8 @@ The `/` in measurement names is fine for InfluxDB but must be double-quoted in I
 -- newest cell voltages of battery 1
 SELECT voltage FROM "pylontech/cell" WHERE battery = '1' ORDER BY time DESC LIMIT 15
 
--- one series per cell, correctly ordered; in Grafana set ALIAS BY to $tag_cell_id
-SELECT mean("voltage") FROM "pylontech/cell" WHERE $timeFilter GROUP BY time($__interval), "cell_id"
+-- one series per cell, correctly ordered; in Grafana set ALIAS BY to $tag_battery_id/$tag_cell_id
+SELECT mean("voltage") FROM "pylontech/cell" WHERE $timeFilter GROUP BY time($__interval), "battery_id", "cell_id"
 
 -- worst cell spread per module over the last day
 SELECT max("cell_spread") FROM "pylontech/battery" WHERE time > now() - 1d GROUP BY "barcode"
