@@ -71,9 +71,11 @@ udevadm info -q property -n /dev/ttyUSB0 | grep -E 'ID_VENDOR_ID|ID_MODEL_ID|ID_
 Note the `ID_SERIAL_SHORT` value (e.g. `A50285BI`). If your adapter has no serial number, use
 `ID_VENDOR_ID` + `ID_MODEL_ID` instead (see the variant below).
 
-**b) Install the rule so that it survives firmware updates.** `/etc` is replaced on every Venus OS
-update, but `/data` is kept. Venus runs `/data/rcS.local` early in boot, before udev processes the
-serial devices, so the rule is (re)appended to Venus's own `serial-starter.rules` from there.
+**b) Install the rule so that it survives reboots and firmware updates.** The Venus root
+filesystem is mounted **read-only** and `/etc` is replaced on every firmware update, while `/data`
+is kept. Venus runs `/data/rcS.local` early in boot, so the script below remounts the root
+filesystem writable, appends the rule to Venus's own `serial-starter.rules` if it is missing, and
+re-triggers udev so an already plugged cable is re-tagged.
 
 Replace `A50285BI` with your adapter's `ID_SERIAL_SHORT`, then paste the whole block into the
 SSH session:
@@ -87,18 +89,24 @@ RULE
 
 cat > /data/rcS.local <<'SCRIPT'
 #!/bin/sh
-grep -q ttyPYLON /etc/udev/rules.d/serial-starter.rules || {
-  cat /data/udev/serial-starter.rules >> /etc/udev/rules.d/serial-starter.rules
+RULES=/etc/udev/rules.d/serial-starter.rules
+if ! grep -q ttyPYLON "$RULES"; then
+  /opt/victronenergy/swupdate-scripts/remount-rw.sh
+  cat /data/udev/serial-starter.rules >> "$RULES"
   udevadm control --reload-rules
-}
+  udevadm trigger --subsystem-match=tty --action=add
+fi
 SCRIPT
 chmod +x /data/rcS.local
 
-sh /data/rcS.local && udevadm trigger
+sh /data/rcS.local
 ```
 
+Without the `remount-rw.sh` line the append fails silently with "Read-only file system" and
+serial-starter grabs the port again after the next reboot.
+
 If `/data/rcS.local` already exists (e.g. from dbus-serialbattery or another add-on), append the
-`grep … || { … }` block to it instead of overwriting the file.
+`if … fi` block to it instead of overwriting the file.
 
 Variant for an adapter without a usable serial number, matching the vendor/model IDs instead:
 
@@ -144,11 +152,11 @@ only requires internet access to the npm registry and a little free space on `/d
 Deploy the node with the default port `/dev/ttyPYLON`: a green **ready** status means the battery
 answered with its `pylon>` prompt.
 
-### 6. After a Venus OS firmware update
+### 6. After a reboot or a Venus OS firmware update
 
-`/data` is preserved, so the rule is reinstalled automatically at boot by `/data/rcS.local`.
-If the battery stops answering after an update, run `sh /data/rcS.local` once or reboot, and
-repeat the checks from step 4.
+`/data` is preserved, so `/data/rcS.local` re-applies the rule automatically at boot, including
+after a firmware update that replaced `/etc`. If the battery stops answering after a reboot, run
+the checks from step 4; `sh -x /data/rcS.local` shows whether the append succeeded.
 
 ---
 
