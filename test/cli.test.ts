@@ -154,7 +154,7 @@ describe('runCli', () => {
     expect(lines).toHaveLength(3);
     expect(lines[0]).toMatch(/^bms\/stack,chain=1 battery_count=2,/);
     expect(lines[1]).toMatch(
-      /^bms\/battery,barcode=PPTBH02212345678,battery=1,chain=1 voltage=49.64,/,
+      /^bms\/battery,barcode=PPTBH02212345678,battery=1,battery_id=B01,chain=1 voltage=49.64,/,
     );
     expect(r.err.at(-1)).toMatch(/3 point\(s\), timestamps in ms/);
   });

@@ -32,7 +32,16 @@ describe('cellPoints', () => {
     expect(pts).toHaveLength(30);
     const p = pts[0]!;
     expect(p.measurement).toBe('pylontech/cell');
-    expect(p.tags).toEqual({ chain: '1', battery: '1', barcode: 'PPTBH02212345678', cell: '1' });
+    expect(p.tags).toEqual({
+      chain: '1',
+      battery: '1',
+      battery_id: 'B01',
+      barcode: 'PPTBH02212345678',
+      cell: '1',
+      cell_id: 'B01/C01',
+    });
+    expect(pts[14]!.tags['cell_id']).toBe('B01/C15');
+    expect(pts[15]!.tags['cell_id']).toBe('B02/C01');
     expect(p.fields).toMatchObject({
       voltage: 3.305,
       current: -1.876,
@@ -51,7 +60,13 @@ describe('cellPoints', () => {
   it('omits barcode tag when info is unknown and states when disabled', () => {
     const pts = cellPoints(reading(), { ...opts, includeStates: false, cellIndexBase: 0 });
     const p = pts[15]!; // first cell of battery 2
-    expect(p.tags).toEqual({ chain: '1', battery: '2', cell: '0' });
+    expect(p.tags).toEqual({
+      chain: '1',
+      battery: '2',
+      battery_id: 'B02',
+      cell: '0',
+      cell_id: 'B02/C00',
+    });
     expect(p.fields).not.toHaveProperty('base_state');
   });
 
@@ -68,7 +83,12 @@ describe('batteryPoints', () => {
     expect(pts).toHaveLength(2);
     const p = pts[0]!;
     expect(p.measurement).toBe('pylontech/battery');
-    expect(p.tags).toEqual({ chain: '1', battery: '1', barcode: 'PPTBH02212345678' });
+    expect(p.tags).toEqual({
+      chain: '1',
+      battery: '1',
+      battery_id: 'B01',
+      barcode: 'PPTBH02212345678',
+    });
     expect(p.fields).toMatchObject({
       voltage: 49.64,
       current: -1.876,

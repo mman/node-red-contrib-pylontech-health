@@ -22,8 +22,19 @@ function firmwareString(b: Battery): string | undefined {
   return [fw.main, fw.soft].filter(Boolean).join('/') || undefined;
 }
 
+const pad2 = (n: number): string => String(n).padStart(2, '0');
+
+/** Zero-padded identifiers that sort correctly as strings: B01, B01/C07. */
+export const batteryId = (position: number): string => `B${pad2(position)}`;
+export const cellId = (position: number, cell: number): string =>
+  `${batteryId(position)}/C${pad2(cell)}`;
+
 function batteryTags(chain: number, b: Battery): Record<string, string> {
-  const tags: Record<string, string> = { chain: String(chain), battery: String(b.position) };
+  const tags: Record<string, string> = {
+    chain: String(chain),
+    battery: String(b.position),
+    battery_id: batteryId(b.position),
+  };
   if (b.info?.barcode) tags['barcode'] = b.info.barcode;
   return tags;
 }
@@ -53,7 +64,11 @@ export function cellPoints(reading: StackReading, opts: PointOptions): InfluxPoi
       });
       points.push({
         measurement,
-        tags: { ...base, cell: String(c.index + opts.cellIndexBase) },
+        tags: {
+          ...base,
+          cell: String(c.index + opts.cellIndexBase),
+          cell_id: cellId(b.position, c.index + opts.cellIndexBase),
+        },
         fields,
         timestamp: reading.polledAt,
       });

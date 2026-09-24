@@ -154,7 +154,14 @@ describe('pylontech-health node', () => {
     expect(pts[0]).toMatchObject({ measurement: 'bms/stack', tags: { chain: '2' } });
     expect(pts[3]).toMatchObject({
       measurement: 'bms/cell',
-      tags: { chain: '2', battery: '1', cell: '1', barcode: 'PPTBH02212345678' },
+      tags: {
+        chain: '2',
+        battery: '1',
+        battery_id: 'B01',
+        cell: '1',
+        cell_id: 'B01/C01',
+        barcode: 'PPTBH02212345678',
+      },
     });
     expect(pts[3]!.timestamp).toBeInstanceOf(Date);
     expect(points[0]!.topic).toBe('bms/points'.replace('bms', 'pylontech'));
