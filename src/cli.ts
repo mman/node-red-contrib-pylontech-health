@@ -29,7 +29,7 @@ Commands:
   capture <dir>         save pwr, info N, bat N (and soh N) outputs as fixture files in <dir>
 
 Options:
-  -p, --port <path>     serial device            (default /dev/ttyUSB0)
+  -p, --port <path>     serial device            (default /dev/ttyPYLON)
   -b, --baud <n>        console baud rate        (default 115200)
       --no-wakeup       skip the 1200-baud wake sequence
       --chain <n>       chain tag                (default 1)
@@ -75,7 +75,7 @@ export function parseCliArgs(argv: string[]): CliOptions {
     args: argv,
     allowPositionals: true,
     options: {
-      port: { type: 'string', short: 'p', default: '/dev/ttyUSB0' },
+      port: { type: 'string', short: 'p', default: '/dev/ttyPYLON' },
       baud: { type: 'string', short: 'b', default: '115200' },
       wakeup: { type: 'boolean', default: true },
       'no-wakeup': { type: 'boolean', default: false },
@@ -108,7 +108,7 @@ export function parseCliArgs(argv: string[]): CliOptions {
     throw new Error(`--format must be json or line, got "${format}"`);
   const [command = '', ...rest] = positionals;
   return {
-    port: values.port ?? '/dev/ttyUSB0',
+    port: values.port ?? '/dev/ttyPYLON',
     baud: int(values.baud, 'baud', 115200),
     wakeup: !values['no-wakeup'],
     chain: Math.max(1, int(values.chain, 'chain', 1)),

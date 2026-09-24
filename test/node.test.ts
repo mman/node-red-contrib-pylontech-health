@@ -68,7 +68,7 @@ describe('readSettings', () => {
   it('applies defaults and coerces editor strings', () => {
     const s = readSettings({ id: 'x', type: 'pylontech-health', name: '', z: '' });
     expect(s).toMatchObject({
-      port: '/dev/ttyUSB0',
+      port: '/dev/ttyPYLON',
       baud: 115200,
       wakeup: true,
       chain: 1,

@@ -22,7 +22,7 @@ describe('parseCliArgs', () => {
   it('applies node defaults', () => {
     const o = parseCliArgs(['poll']);
     expect(o).toMatchObject({
-      port: '/dev/ttyUSB0',
+      port: '/dev/ttyPYLON',
       baud: 115200,
       wakeup: true,
       chain: 1,
@@ -197,7 +197,7 @@ describe('runCli', () => {
 
   it('fails cleanly when the port cannot be opened', async () => {
     const r = run(['probe'], {
-      openError: new Error('ENOENT: no such file or directory, cannot open /dev/ttyUSB0'),
+      openError: new Error('ENOENT: no such file or directory, cannot open /dev/ttyPYLON'),
     });
     expect(await r.code).toBe(1);
     expect(r.err.at(-1)).toMatch(/error: ENOENT/);

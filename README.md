@@ -32,13 +32,13 @@ alarm on.
   Log in with `ssh root@<cerbo-ip>`.
 - Venus OS 3.80 ships Node.js 24 with Node-RED; nothing else needs to be installed.
 
-### 2. Cable
+### 2. Connect the diagnostic cable
 
 Connect the master battery's **Console** RJ45 port (not the RS485 or CAN ports) through a Pylontech
 console cable / RS232 adapter to a USB–serial adapter on the Cerbo. The Pylontech RJ45 console pinout
 is pin 3 TX, pin 6 RX, pin 8 GND (RS232 levels).
 
-Check the adapter shows up:
+Check that the adapter enumerates:
 
 ```sh
 ls -l /dev/serial/by-id/
@@ -46,31 +46,31 @@ dmesg | tail
 ```
 
 You should see something like `usb-FTDI_FT232R_USB_UART_A50285BI-if00-port0 -> ../../ttyUSB0`.
+Note the `ttyUSBn` name, it is needed once in the next step.
 
-### 3. Why serial-starter must ignore the port
+### 3. Register the cable as `/dev/ttyPYLON`
 
-Venus OS runs `serial-starter`, which probes every new `ttyUSB*` device with its VE.Direct, MK3,
-GPS and other drivers. It would hold the port open and send garbage to the battery. Devices whose
-udev environment has `VE_SERVICE=ignore` are skipped.
+This step does two things at once, and everything later relies on it:
 
-### 4. Identify the adapter
+- **Keeps Venus off the port.** Venus OS runs `serial-starter`, which probes every new `ttyUSB*`
+  device with its VE.Direct, MK3, GPS and other drivers. It would hold the port open and send
+  garbage to the battery. Devices whose udev environment has `VE_SERVICE=ignore` are skipped.
+- **Gives the cable a fixed name.** The rule creates `/dev/ttyPYLON`, which is the default serial
+  port of the node, the CLI and the example flow. `ttyUSB0` can become `ttyUSB1` after a reboot or
+  when another USB device is plugged in; `/dev/ttyPYLON` always points at the Pylontech cable.
 
-Match the rule to the adapter itself rather than to `ttyUSB0`, which can change when devices are
-re-enumerated:
+**a) Identify the adapter.** Match the rule to the adapter itself, not to its current `ttyUSBn`:
 
 ```sh
 udevadm info -q property -n /dev/ttyUSB0 | grep -E 'ID_VENDOR_ID|ID_MODEL_ID|ID_MODEL=|ID_SERIAL_SHORT'
 ```
 
 Note the `ID_SERIAL_SHORT` value (e.g. `A50285BI`). If your adapter has no serial number, use
-`ID_VENDOR_ID` + `ID_MODEL_ID` instead.
+`ID_VENDOR_ID` + `ID_MODEL_ID` instead (see the variant below).
 
-### 5. Add the udev rule so that it survives firmware updates
-
-`/etc` is replaced on every Venus OS update, but `/data` is kept. Venus runs `/data/rcS.local`
-early in boot, before udev processes the serial devices, so the rule is (re)appended to Venus's
-own `serial-starter.rules` from there. The rule also creates a stable `/dev/ttyPYLON` symlink so
-the node configuration does not depend on the `ttyUSBn` number.
+**b) Install the rule so that it survives firmware updates.** `/etc` is replaced on every Venus OS
+update, but `/data` is kept. Venus runs `/data/rcS.local` early in boot, before udev processes the
+serial devices, so the rule is (re)appended to Venus's own `serial-starter.rules` from there.
 
 Replace `A50285BI` with your adapter's `ID_SERIAL_SHORT`, then paste the whole block into the
 SSH session:
@@ -97,7 +97,7 @@ sh /data/rcS.local && udevadm trigger
 If `/data/rcS.local` already exists (e.g. from dbus-serialbattery or another add-on), append the
 `grep … || { … }` block to it instead of overwriting the file.
 
-For an adapter without a usable serial number, match the vendor/model IDs instead:
+Variant for an adapter without a usable serial number, matching the vendor/model IDs instead:
 
 ```sh
 ACTION=="add", ENV{ID_BUS}=="usb", ENV{ID_VENDOR_ID}=="0403", ENV{ID_MODEL_ID}=="6001", ENV{VE_SERVICE}="ignore", SYMLINK+="ttyPYLON"
@@ -107,23 +107,20 @@ Appending to `serial-starter.rules` itself means our line is evaluated last with
 serial-starter reads, so `VE_SERVICE=ignore` is the final value. This is the setup verified on a
 Cerbo GX running Venus OS 3.80.
 
-### 6. Verify
+### 4. Verify
 
-Re-plug the cable (or reboot) and check that nothing grabbed the port:
+Re-plug the cable (or reboot) and check that `/dev/ttyPYLON` exists and nothing grabbed the port:
 
 ```sh
 ls -l /dev/ttyPYLON                                          # -> ttyUSBn
 udevadm info -q property -n /dev/ttyPYLON | grep VE_SERVICE  # -> VE_SERVICE=ignore
-for s in /service/*ttyUSB0*; do svstat $s; done              # all "down" (or no such services)
+for s in /service/*ttyUSB*; do svstat $s; done               # all "down" (or no such services)
 ```
 
 Service directories created before the rule took effect stay listed under `/service` but must all
 report `down`; they disappear after a reboot.
 
-Then deploy the node (below): a green **ready** status means the battery answered with its
-`pylon>` prompt.
-
-### 7. Install the node
+### 5. Install the node
 
 Either in the Node-RED editor: _Menu → Manage palette → Install → search
 `node-red-contrib-pylontech-health`_, or from the shell:
@@ -141,17 +138,14 @@ The package's only dependency is `serialport`, whose native binding ships prebui
 Cerbo's ARMv7 glibc inside the npm tarball. No compiler or extra download is needed; the install
 only requires internet access to the npm registry and a little free space on `/data`.
 
-### 8. Prefer the stable device path
+Deploy the node with the default port `/dev/ttyPYLON`: a green **ready** status means the battery
+answered with its `pylon>` prompt.
 
-In the node's _Serial port_ field use `/dev/ttyPYLON` (from the rule above) or the
-`/dev/serial/by-id/...` path from step 2 instead of `/dev/ttyUSB0`, so the flow keeps working if
-the adapters get renumbered.
-
-### 9. After a Venus OS firmware update
+### 6. After a Venus OS firmware update
 
 `/data` is preserved, so the rule is reinstalled automatically at boot by `/data/rcS.local`.
 If the battery stops answering after an update, run `sh /data/rcS.local` once or reboot, and
-repeat the checks from step 6.
+repeat the checks from step 4.
 
 ---
 
@@ -167,12 +161,13 @@ node node_modules/node-red-contrib-pylontech-health/dist/cli.js --help
 alias pyl='node node_modules/node-red-contrib-pylontech-health/dist/cli.js'
 ```
 
-Options default to the node's defaults (`--port /dev/ttyUSB0`, `--baud 115200`, wake sequence on).
+Options default to the node's defaults (`--port /dev/ttyPYLON` from step 3, `--baud 115200`, wake
+sequence on).
 Progress goes to stderr, results to stdout, so output can be piped or redirected.
 
 ```sh
 # 1. does the console answer? prints battery positions from pwr and the master's info
-pyl -p /dev/ttyUSB0 probe
+pyl probe
 
 # 2. one raw command, to eyeball your firmware's table layout
 pyl raw pwr
@@ -207,20 +202,20 @@ node on the second output.
 
 ### Configuration
 
-| option             | default        | meaning                                                                                                                                     |
-| ------------------ | -------------- | ------------------------------------------------------------------------------------------------------------------------------------------- |
-| Serial port        | `/dev/ttyUSB0` | Device path of the console cable                                                                                                            |
-| Baud               | `115200`       | Console speed after wake-up                                                                                                                 |
-| Wake sequence      | on             | Open at 1200 baud, send the Pylontech switch sequence, then change to _Baud_                                                                |
-| Chain              | `1`            | Value of the `chain` tag (one console cable = one chain/stack)                                                                              |
-| Measurement prefix | `pylontech`    | Measurements become `<prefix>/cell`, `<prefix>/battery`, `<prefix>/stack`                                                                   |
-| Cell numbering     | 1-based        | `cell` tag: 1…15 like Venus OS, or 0…14 like the raw `bat` output                                                                           |
-| Include states     | on             | Add `base_state`, `volt_state`, … string fields                                                                                             |
-| Read stat          | on             | Read `stat N` with each info refresh: state of health, cycle count, lifetime counters                                                       |
-| Read SOH           | off            | Also run `soh N` and add the `soh` field. Not every firmware has the command (US3000C B69.25 does not); the node warns once and disables it |
-| Refresh info       | `60` min       | Re-read `info N` (barcode, firmware) at most this often; `0` = every poll                                                                   |
-| Command timeout    | `3000` ms      | Console silence before a command is failed (long paged outputs are fine)                                                                    |
-| Poll timeout       | `30000` ms     | For the whole cycle; on expiry the node reconnects                                                                                          |
+| option             | default         | meaning                                                                                                                                     |
+| ------------------ | --------------- | ------------------------------------------------------------------------------------------------------------------------------------------- |
+| Serial port        | `/dev/ttyPYLON` | Device path of the console cable (the symlink from the setup steps above)                                                                   |
+| Baud               | `115200`        | Console speed after wake-up                                                                                                                 |
+| Wake sequence      | on              | Open at 1200 baud, send the Pylontech switch sequence, then change to _Baud_                                                                |
+| Chain              | `1`             | Value of the `chain` tag (one console cable = one chain/stack)                                                                              |
+| Measurement prefix | `pylontech`     | Measurements become `<prefix>/cell`, `<prefix>/battery`, `<prefix>/stack`                                                                   |
+| Cell numbering     | 1-based         | `cell` tag: 1…15 like Venus OS, or 0…14 like the raw `bat` output                                                                           |
+| Include states     | on              | Add `base_state`, `volt_state`, … string fields                                                                                             |
+| Read stat          | on              | Read `stat N` with each info refresh: state of health, cycle count, lifetime counters                                                       |
+| Read SOH           | off             | Also run `soh N` and add the `soh` field. Not every firmware has the command (US3000C B69.25 does not); the node warns once and disables it |
+| Refresh info       | `60` min        | Re-read `info N` (barcode, firmware) at most this often; `0` = every poll                                                                   |
+| Command timeout    | `3000` ms       | Console silence before a command is failed (long paged outputs are fine)                                                                    |
+| Poll timeout       | `30000` ms      | For the whole cycle; on expiry the node reconnects                                                                                          |
 
 ### Input
 

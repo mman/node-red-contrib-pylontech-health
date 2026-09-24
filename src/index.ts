@@ -50,7 +50,7 @@ const bool = (v: unknown, dflt: boolean): boolean => {
 
 export function readSettings(def: PylontechHealthNodeDef): Settings {
   return {
-    port: (def.port ?? '').trim() || '/dev/ttyUSB0',
+    port: (def.port ?? '').trim() || '/dev/ttyPYLON',
     baud: num(def.baud, 115200),
     wakeup: bool(def.wakeup, true),
     chain: Math.max(1, Math.trunc(num(def.chain, 1))),
