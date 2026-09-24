@@ -1,0 +1,21 @@
+bat 2
+@
+Battery  Volt   Curr   Tempr  Base State  Volt. State  Curr. State  Temp. State  SOC       Coulomb   
+0        3414   2480   24000  Charge      Normal       Normal       Normal       95%       47500 mAH 
+1        3415   2480   24000  Charge      Normal       Normal       Normal       95%       47500 mAH 
+2        3416   2480   24000  Charge      Normal       Normal       Normal       95%       47500 mAH 
+3        3414   2480   24000  Charge      Normal       Normal       Normal       95%       47500 mAH 
+4        3415   2480   24000  Charge      Normal       Normal       Normal       95%       47500 mAH 
+5        3416   2480   24000  Charge      Normal       Normal       Normal       95%       47500 mAH 
+6        3414   2480   24000  Charge      Normal       Normal       Normal       95%       47500 mAH 
+7        3415   2480   24000  Charge      Normal       Normal       Normal       95%       47500 mAH 
+8        3416   2480   24000  Charge      Normal       Normal       Normal       95%       47500 mAH 
+9        3414   2480   24000  Charge      Normal       Normal       Normal       95%       47500 mAH 
+10       3415   2480   24000  Charge      Normal       Normal       Normal       95%       47500 mAH 
+11       3416   2480   24000  Charge      Normal       Normal       Normal       95%       47500 mAH 
+12       3414   2480   24000  Charge      Normal       Normal       Normal       95%       47500 mAH 
+13       3415   2480   24000  Charge      Normal       Normal       Normal       95%       47500 mAH 
+14       3416   2480   24000  Charge      Normal       Normal       Normal       95%       47500 mAH 
+Command completed successfully
+$$
+pylon>

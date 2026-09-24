@@ -1,0 +1,11 @@
+pwr
+@
+
+Power Volt   Curr   Tempr  Tlow   Thigh  Vlow   Vhigh  Base.St  Volt.St  Curr.St  Temp.St  Coulomb  Time                 B.V.St   B.T.St   
+1     51234  2500   24000  23000  24000  3415   3417   Charge   Normal   Normal   Normal   96%      2021-05-02 08:15:00  Normal   Normal   
+2     51230  2480   24000  23000  24000  3414   3417   Charge   Normal   Normal   Normal   95%      2021-05-02 08:15:00  Normal   Normal   
+3     51228  2470   25000  23000  25000  3413   3418   Charge   Normal   Normal   Normal   95%      2021-05-02 08:15:00  Normal   Normal   
+4     -      -      -      -      -      -      -      Absent   -        -        -        -        -                    -        -        
+Command completed successfully
+$$
+pylon>

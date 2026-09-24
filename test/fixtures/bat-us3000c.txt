@@ -1,0 +1,21 @@
+bat 1
+@
+Battery  Volt   Curr   Tempr  Base State  Volt. State  Curr. State  Temp. State  SOC       Coulomb    BAL   
+0        3305   -1876  22000  Dischg      Normal       Normal       Normal       87%       43247 mAH  N    
+1        3306   -1876  22000  Dischg      Normal       Normal       Normal       87%       43247 mAH  N    
+2        3307   -1876  22000  Dischg      Normal       Normal       Normal       87%       43247 mAH  N    
+3        3308   -1876  22000  Dischg      Normal       Normal       Normal       87%       43247 mAH  Y    
+4        3305   -1876  22000  Dischg      Normal       Normal       Normal       87%       43247 mAH  N    
+5        3306   -1876  22000  Dischg      Normal       Normal       Normal       87%       43247 mAH  N    
+6        3307   -1876  22000  Dischg      Normal       Normal       Normal       87%       43247 mAH  N    
+7        3308   -1876  22000  Dischg      Normal       Normal       Normal       87%       43247 mAH  N    
+8        3305   -1876  22000  Dischg      Normal       Normal       Normal       87%       43247 mAH  N    
+9        3306   -1876  22000  Dischg      Normal       Normal       Normal       87%       43247 mAH  N    
+10       3307   -1876  22000  Dischg      Normal       Normal       Normal       87%       43247 mAH  N    
+11       3308   -1876  22000  Dischg      Normal       Normal       Normal       87%       43247 mAH  N    
+12       3305   -1876  22000  Dischg      Normal       Normal       Normal       87%       43247 mAH  N    
+13       3306   -1876  22000  Dischg      Normal       Normal       Normal       87%       43247 mAH  N    
+14       3307   -1876  22000  Dischg      Normal       Normal       Normal       87%       43247 mAH  N    
+Command completed successfully
+$$
+pylon>

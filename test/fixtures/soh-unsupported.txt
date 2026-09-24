@@ -1,0 +1,5 @@
+soh 1
+@
+Unknown command 'soh' - try 'help'
+$$
+pylon>
