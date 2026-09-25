@@ -5,6 +5,17 @@ UP2500 / US5000 / Force …) over the master battery's **console port** and emit
 **InfluxDB points**. Built to run inside Node-RED on a **Victron Cerbo GX** (Venus OS Large ≥ 3.80),
 but works on any Node-RED ≥ 3 with Node.js ≥ 22.
 
+The data it collects is meant for charts like these, here from Grafana over InfluxDB. The first
+one is a state timeline of every cell's voltage over time, showing how the cells of a battery
+charge and discharge and how far apart they sit; the second shows the BMS's passive balancing
+in action, cell by cell, over the same period. This particular battery was rebuilt from packs at
+different states of charge and is being top-balanced; a fully balanced pack, and a stack with
+several batteries, will replace these pictures later.
+
+![Cell voltage over time](https://raw.githubusercontent.com/mman/node-red-contrib-pylontech-health/main/docs/pylontech_cell_voltage.png)
+
+![Passive cell balancing over time](https://raw.githubusercontent.com/mman/node-red-contrib-pylontech-health/main/docs/pylontech_cell_balancing.png)
+
 Per poll the node runs `pwr` → `info N` + `stat N` (cached, hourly) → `bat N` (→ `soh N`, optional) for
 every battery in the stack and produces three measurements:
 
