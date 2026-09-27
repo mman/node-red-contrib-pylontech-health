@@ -6,7 +6,11 @@ export interface CellStates {
   base: StateName;
   volt: StateName;
   curr: StateName;
+  /** Temperature verdict; on firmware with separate discharge/charge columns the first non-Normal one. */
   temp: StateName;
+  /** Discharge / charge temperature states, only on firmware that prints them. */
+  dtemp?: StateName;
+  ctemp?: StateName;
 }
 
 export interface Cell {

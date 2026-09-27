@@ -61,6 +61,8 @@ export function cellPoints(reading: StackReading, opts: PointOptions): InfluxPoi
               volt_state: c.states.volt,
               curr_state: c.states.curr,
               temp_state: c.states.temp,
+              dtemp_state: c.states.dtemp,
+              ctemp_state: c.states.ctemp,
             }
           : {}),
       });
@@ -132,6 +134,8 @@ export function batteryPoints(reading: StackReading, opts: PointOptions): Influx
             volt_state: p.states.volt,
             curr_state: p.states.curr,
             temp_state: p.states.temp,
+            dtemp_state: p.states.dtemp,
+            ctemp_state: p.states.ctemp,
             bv_state: p.states.bv,
             bt_state: p.states.bt,
             mt_state: p.states.mt,

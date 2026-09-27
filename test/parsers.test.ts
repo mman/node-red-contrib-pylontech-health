@@ -247,3 +247,49 @@ describe('parseStat (real US3000C B69.25.0.0 capture)', () => {
     expect(isUnknownCommand(fixture('pwr-us3000c-b69.txt'))).toBe(false);
   });
 });
+
+describe('bat with separate DTemp/CTemp state columns and wide "mAH" gap', () => {
+  it('keeps every column aligned', () => {
+    const cells = parseBat(fixture('bat-dtemp-ctemp-1.txt'));
+    expect(cells).toHaveLength(15);
+    expect(cells[0]).toMatchObject({
+      index: 0,
+      voltage: 3.455,
+      current: -0.108,
+      temperature: 24.6,
+      soc: 99,
+      coulombAh: 73.1,
+      balancing: false,
+      states: {
+        base: 'Idle',
+        volt: 'Normal',
+        curr: 'Normal',
+        temp: 'Normal',
+        dtemp: 'Normal',
+        ctemp: 'Normal',
+      },
+    });
+    expect(cells[5]).toMatchObject({
+      current: -0.16,
+      temperature: 24.5,
+      states: { base: 'Dischg' },
+    });
+    expect(cells.every((c) => Object.keys(c.extra).length === 0)).toBe(true);
+  });
+
+  it('parses a zero coulomb counter as 0 Ah, not undefined', () => {
+    const cells = parseBat(fixture('bat-dtemp-ctemp-2.txt'));
+    expect(cells[0]).toMatchObject({ soc: 99, coulombAh: 0, balancing: false, voltage: 3.458 });
+    expect(cells[12]!.voltage).toBeCloseTo(3.445);
+  });
+
+  it('folds D/C temperature states into temp, reporting the non-Normal one', () => {
+    const raw = fixture('bat-dtemp-ctemp-1.txt').replace(
+      /^(0\s+3455.*?Normal\s+Normal\s+)Normal(\s+Normal\s+99%)/m,
+      '$1High$2',
+    );
+    const cells = parseBat(raw);
+    expect(cells[0]!.states).toMatchObject({ dtemp: 'High', ctemp: 'Normal', temp: 'High' });
+    expect(cells[1]!.states.temp).toBe('Normal');
+  });
+});

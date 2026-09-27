@@ -11,17 +11,22 @@ const NOISE_LINES = new Set(['@', '$$', 'pylon>', 'Command completed successfull
 
 /** Multi-word / punctuated header tokens → single canonical key. */
 const HEADER_ALIASES: Array<[RegExp, string]> = [
-  [/Base\s*State/i, 'BaseState'],
-  [/Volt\.?\s*State/i, 'VoltState'],
-  [/Curr\.?\s*State/i, 'CurrState'],
-  [/Temp\.?\s*State/i, 'TempState'],
-  [/Base\.St/i, 'BaseState'],
-  [/Volt\.St/i, 'VoltState'],
-  [/Curr\.St/i, 'CurrState'],
-  [/Temp\.St/i, 'TempState'],
-  [/B\.V\.St/i, 'BVState'],
-  [/B\.T\.St/i, 'BTState'],
-  [/M\.T\.St/i, 'MTState'],
+  // Order matters: the D/C temperature variants must be folded before the generic one.
+  [/DTemp\.?\s*State/gi, 'DTempState'],
+  [/CTemp\.?\s*State/gi, 'CTempState'],
+  [/Base\s*State/gi, 'BaseState'],
+  [/Volt\.?\s*State/gi, 'VoltState'],
+  [/Curr\.?\s*State/gi, 'CurrState'],
+  [/Temp\.?\s*State/gi, 'TempState'],
+  [/Base\.St/gi, 'BaseState'],
+  [/Volt\.St/gi, 'VoltState'],
+  [/Curr\.St/gi, 'CurrState'],
+  [/DTemp\.St/gi, 'DTempState'],
+  [/CTemp\.St/gi, 'CTempState'],
+  [/Temp\.St/gi, 'TempState'],
+  [/B\.V\.St/gi, 'BVState'],
+  [/B\.T\.St/gi, 'BTState'],
+  [/M\.T\.St/gi, 'MTState'],
 ];
 
 /** True when the console rejected the command (e.g. `Unknown command 'soh' - try 'help'`). */
@@ -56,6 +61,19 @@ function normaliseHeader(line: string): string[] {
   let h = line;
   for (const [re, key] of HEADER_ALIASES) h = h.replace(re, key);
   return h.split(/\s+/).filter(Boolean);
+}
+
+/**
+ * Temperature state: firmware prints either one `Temp. State` column or separate
+ * discharge/charge columns (`DTemp. State`, `CTemp. State`). Fold the pair into one
+ * verdict, reporting the first non-Normal value.
+ */
+function tempState(r: Record<string, string>): string {
+  if (r['TempState'] !== undefined) return r['TempState'];
+  const d = r['DTempState'];
+  const c = r['CTempState'];
+  if (d === undefined && c === undefined) return '';
+  return [d, c].find((v) => v !== undefined && !/^normal$/i.test(v)) ?? d ?? c ?? '';
 }
 
 /** Join tokens that the firmware prints with an internal space. */
@@ -130,6 +148,8 @@ const PWR_KNOWN = new Set([
   'VoltState',
   'CurrState',
   'TempState',
+  'DTempState',
+  'CTempState',
   'Coulomb',
   'Time',
   'BVState',
@@ -164,7 +184,9 @@ export function parsePwr(raw: string): PowerRow[] {
         base: r['BaseState'] ?? '',
         volt: r['VoltState'] ?? '',
         curr: r['CurrState'] ?? '',
-        temp: r['TempState'] ?? '',
+        temp: tempState(r),
+        dtemp: r['DTempState'],
+        ctemp: r['CTempState'],
         bv: r['BVState'],
         bt: r['BTState'],
         mt: r['MTState'],
@@ -184,6 +206,8 @@ const BAT_KNOWN = new Set([
   'VoltState',
   'CurrState',
   'TempState',
+  'DTempState',
+  'CTempState',
   'SOC',
   'Coulomb',
   'BAL',
@@ -208,7 +232,9 @@ export function parseBat(raw: string): Cell[] {
         base: r['BaseState'] ?? '',
         volt: r['VoltState'] ?? '',
         curr: r['CurrState'] ?? '',
-        temp: r['TempState'] ?? '',
+        temp: tempState(r),
+        dtemp: r['DTempState'],
+        ctemp: r['CTempState'],
       },
       extra,
     };

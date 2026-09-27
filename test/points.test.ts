@@ -226,3 +226,28 @@ describe('delta and spread fields', () => {
     expect(pts[1]!.fields['temperature_delta']).toBe(1);
   });
 });
+
+describe('dtemp/ctemp state fields', () => {
+  it('emits dtemp_state and ctemp_state only when the firmware reports them', () => {
+    const pwr = parsePwr(fixture('pwr-us3000c-b69.txt'));
+    const cells = parseBat(fixture('bat-dtemp-ctemp-1.txt'));
+    const r: StackReading = {
+      chain: 1,
+      polledAt: new Date(),
+      durationMs: 1,
+      batteries: [assembleBattery(pwr[0]!, undefined, cells, 1)],
+      errors: [],
+    };
+    const p = cellPoints(r, opts)[0]!;
+    expect(p.fields).toMatchObject({
+      soc: 99,
+      coulomb: 73.1,
+      balancing: false,
+      temp_state: 'Normal',
+      dtemp_state: 'Normal',
+      ctemp_state: 'Normal',
+    });
+    const old = cellPoints(reading(), opts)[0]!;
+    expect(old.fields).not.toHaveProperty('dtemp_state');
+  });
+});

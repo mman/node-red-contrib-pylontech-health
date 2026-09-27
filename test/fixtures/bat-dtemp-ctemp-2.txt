@@ -1,0 +1,22 @@
+bat 2
+@
+
+Battery  Volt     Curr     Tempr    Base State   Volt. State  Curr. State  DTemp. State CTemp. State SOC          Coulomb          BAL
+0        3458     -108     24600    Idle         Normal       Normal       Normal       Normal       99%          0            mAH N
+1        3455     -108     24600    Idle         Normal       Normal       Normal       Normal       99%          0            mAH N
+2        3459     -108     24600    Idle         Normal       Normal       Normal       Normal       99%          0            mAH N
+3        3454     -108     24600    Idle         Normal       Normal       Normal       Normal       99%          0            mAH N
+4        3454     -108     24600    Idle         Normal       Normal       Normal       Normal       99%          0            mAH N
+5        3457     -108     24300    Idle         Normal       Normal       Normal       Normal       99%          0            mAH N
+6        3453     -108     24300    Idle         Normal       Normal       Normal       Normal       99%          0            mAH N
+7        3457     -108     24300    Idle         Normal       Normal       Normal       Normal       99%          0            mAH N
+8        3456     -108     24300    Idle         Normal       Normal       Normal       Normal       99%          0            mAH N
+9        3456     -108     24300    Idle         Normal       Normal       Normal       Normal       99%          0            mAH N
+10       3454     -108     24200    Idle         Normal       Normal       Normal       Normal       99%          0            mAH N
+11       3458     -108     24200    Idle         Normal       Normal       Normal       Normal       99%          0            mAH N
+12       3445     -108     24200    Idle         Normal       Normal       Normal       Normal       99%          0            mAH N
+13       3455     -108     24200    Idle         Normal       Normal       Normal       Normal       99%          0            mAH N
+14       3457     -108     24200    Idle         Normal       Normal       Normal       Normal       99%          0            mAH N
+Command completed successfully
+$$
+pylon>
