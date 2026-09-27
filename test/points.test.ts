@@ -49,6 +49,8 @@ describe('cellPoints', () => {
       soc: 87,
       coulomb: 43.247,
       balancing: false,
+      voltage_delta: -0.001,
+      temperature_delta: 0,
       base_state: 'Dischg',
       volt_state: 'Normal',
       curr_state: 'Normal',
@@ -101,7 +103,11 @@ describe('batteryPoints', () => {
       mos_temperature: 23,
       cell_min_voltage: 3.305,
       cell_max_voltage: 3.308,
-      cell_spread: 0.003,
+      cell_voltage_spread: 0.003,
+      cell_min_temperature: 22,
+      cell_max_temperature: 22,
+      cell_temperature_spread: 0,
+      temperature_delta: 0,
       cell_min_index: 1,
       cell_max_index: 4,
       cell_count: 15,
@@ -140,7 +146,8 @@ describe('stackPoint', () => {
       soc: 87,
       cell_min_voltage: 3.305,
       cell_max_voltage: 3.308,
-      cell_spread: 0.003,
+      cell_voltage_spread: 0.003,
+      cell_temperature_spread: 0,
       temp_min: 25,
       temp_max: 25,
       poll_duration_ms: 3210,
@@ -172,5 +179,50 @@ describe('toPoints', () => {
       'bms/battery',
       'bms/cell',
     ]);
+  });
+});
+
+describe('delta and spread fields', () => {
+  it('computes cell deltas against the battery mean and temperature spread from the real capture', () => {
+    const pwr = parsePwr(fixture('pwr-us3000c-b69.txt'));
+    const cells = parseBat(fixture('bat-us3000c-b69.txt'));
+    const r: StackReading = {
+      chain: 1,
+      polledAt: new Date(),
+      durationMs: 1,
+      batteries: [assembleBattery(pwr[0]!, undefined, cells, 1)],
+      errors: [],
+    };
+    const cellPts = cellPoints(r, opts);
+    // mean of the 15 cells is 3.385 V; cell 0 = 3.493, cell 9 = 3.340
+    expect(cellPts[0]!.fields['voltage_delta']).toBeCloseTo(0.108, 3);
+    expect(cellPts[9]!.fields['voltage_delta']).toBeCloseTo(-0.045, 3);
+    // temperatures: 25.9 (x5), 25.2 (x5), 25.0 (x5) -> mean 25.367
+    expect(cellPts[0]!.fields['temperature_delta']).toBeCloseTo(0.533, 3);
+    expect(cellPts[14]!.fields['temperature_delta']).toBeCloseTo(-0.367, 3);
+    const sum = cellPts.reduce((a, p) => a + (p.fields['voltage_delta'] as number), 0);
+    expect(Math.abs(sum)).toBeLessThan(0.01); // deltas centre on zero
+
+    const bat = batteryPoints(r, opts)[0]!;
+    expect(bat.fields).toMatchObject({
+      cell_voltage_spread: 0.155,
+      cell_min_temperature: 25,
+      cell_max_temperature: 25.9,
+      cell_temperature_spread: 0.9,
+      temperature_delta: 0, // single battery: equals the stack mean
+    });
+    expect(bat.fields).not.toHaveProperty('cell_spread');
+    expect(stackPoint(r, opts).fields).toMatchObject({
+      cell_voltage_spread: 0.155,
+      cell_temperature_spread: 0.9,
+    });
+  });
+
+  it('computes battery temperature_delta against the stack mean', () => {
+    const r = reading();
+    r.batteries[1]!.power.temperature = 27; // battery 1 is 25 -> mean 26
+    const pts = batteryPoints(r, opts);
+    expect(pts[0]!.fields['temperature_delta']).toBe(-1);
+    expect(pts[1]!.fields['temperature_delta']).toBe(1);
   });
 });

@@ -305,22 +305,36 @@ export function parseStat(raw: string): BatteryStat {
   };
 }
 
-/** Compute min/max/spread over cells; `indexBase` shifts reported indices. */
+/** Compute voltage and temperature statistics over cells; `indexBase` shifts reported indices. */
 export function cellStats(cells: Cell[], indexBase: 0 | 1): CellStats | undefined {
   if (cells.length === 0) return undefined;
   let min = cells[0]!;
   let max = cells[0]!;
+  let vSum = 0;
+  let tMin = cells[0]!.temperature;
+  let tMax = cells[0]!.temperature;
+  let tSum = 0;
   for (const c of cells) {
     if (c.voltage < min.voltage) min = c;
     if (c.voltage > max.voltage) max = c;
+    vSum += c.voltage;
+    if (c.temperature < tMin) tMin = c.temperature;
+    if (c.temperature > tMax) tMax = c.temperature;
+    tSum += c.temperature;
   }
+  const r3 = (n: number): number => Number(n.toFixed(3));
   return {
     min: min.voltage,
     max: max.voltage,
-    spread: Number((max.voltage - min.voltage).toFixed(3)),
+    mean: r3(vSum / cells.length),
+    spread: r3(max.voltage - min.voltage),
     minCell: min.index + indexBase,
     maxCell: max.index + indexBase,
     count: cells.length,
+    tempMin: tMin,
+    tempMax: tMax,
+    tempMean: r3(tSum / cells.length),
+    tempSpread: r3(tMax - tMin),
   };
 }
 

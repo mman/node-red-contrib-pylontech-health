@@ -181,18 +181,21 @@
       <code>&lt;prefix&gt;/cell</code> — tags <code>chain</code>, <code>battery</code>,
       <code>cell</code>, <code>barcode</code>; fields <code>voltage</code> V,
       <code>current</code> A, <code>temperature</code> °C, <code>soc</code>,
-      <code>coulomb</code> Ah, <code>balancing</code>, <code>soh</code>, state strings.
+      <code>coulomb</code> Ah, <code>balancing</code>, <code>voltage_delta</code> and
+      <code>temperature_delta</code> (cell minus its battery's mean), <code>soh</code>, state
+      strings.
     </li>
     <li>
       <code>&lt;prefix&gt;/battery</code> — tags <code>chain</code>, <code>battery</code>,
       <code>barcode</code>; module voltage/current/temperatures, <code>cell_min_voltage</code>,
-      <code>cell_max_voltage</code>, <code>cell_spread</code>, firmware, and from
+      <code>cell_max_voltage</code>, <code>cell_voltage_spread</code>,
+      <code>cell_temperature_spread</code>, <code>temperature_delta</code>, firmware, and from
       <code>stat N</code>: <code>soh</code>, <code>cycle_count</code>, <code>power_on_hours</code>,
       event counters.
     </li>
     <li>
       <code>&lt;prefix&gt;/stack</code> — tag <code>chain</code>; counts, aggregate voltage/current,
-      min/max cell voltage, spread, poll duration.
+      min/max cell voltage, voltage and temperature spread, poll duration.
     </li>
   </ul>
 

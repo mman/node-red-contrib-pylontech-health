@@ -130,6 +130,11 @@ describe('cellStats / assembleBattery', () => {
     expect(s1.minCell).toBe(1);
     expect(s0.maxCell).toBe(3);
     expect(s0.count).toBe(15);
+    expect(s0.mean).toBeCloseTo(3.3063, 3);
+    expect(s0.tempMin).toBe(22);
+    expect(s0.tempMax).toBe(22);
+    expect(s0.tempMean).toBe(22);
+    expect(s0.tempSpread).toBe(0);
     expect(cellStats([], 1)).toBeUndefined();
   });
 
@@ -198,6 +203,11 @@ describe('real US3000C firmware B69.25.0.0 bat capture', () => {
     expect(s.spread).toBeCloseTo(0.155);
     expect(s.minCell).toBe(10);
     expect(s.maxCell).toBe(2);
+    expect(s.mean).toBeCloseTo(3.385, 3);
+    expect(s.tempMin).toBe(25);
+    expect(s.tempMax).toBeCloseTo(25.9);
+    expect(s.tempSpread).toBeCloseTo(0.9);
+    expect(s.tempMean).toBeCloseTo(25.367, 3);
   });
 });
 

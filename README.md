@@ -19,11 +19,11 @@ several batteries, will replace these pictures later.
 Per poll the node runs `pwr` → `info N` + `stat N` (cached, hourly) → `bat N` (→ `soh N`, optional) for
 every battery in the stack and produces three measurements:
 
-| measurement         | tags                                                           | key fields                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                   |
-| ------------------- | -------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| `pylontech/cell`    | `chain`, `battery`, `cell`, `barcode`, `battery_id`, `cell_id` | `voltage` V, `current` A, `temperature` °C, `soc` %, `coulomb` Ah, `balancing`, `soh` %, `base_state`, `volt_state`, `curr_state`, `temp_state`                                                                                                                                                                                                                                                                                                                                                              |
-| `pylontech/battery` | `chain`, `battery`, `barcode`, `battery_id`                    | `voltage`, `current`, `temperature`, `temp_low`, `temp_high`, `volt_low`, `volt_high`, `soc`, `coulomb`, `mos_temperature`, `cell_min_voltage`, `cell_max_voltage`, `cell_spread`, `cell_min_index`, `cell_max_index`, `cell_count`, `firmware`, `*_state`; from `stat N`: `soh`, `cycle_count`, `power_on_hours`, `shutdown_count`, `reset_count`, `max_charge_volt_diff`, `max_discharge_volt_diff`, `bat_hv_count`, `bat_lv_count`, `bat_ov_count`, `bat_uv_count`, `life_warn_count`, `life_alarm_count` |
-| `pylontech/stack`   | `chain`                                                        | `battery_count`, `cell_count`, `voltage` (avg), `current` (sum), `soc` (min), `cell_min_voltage`, `cell_max_voltage`, `cell_spread`, `temp_min`, `temp_max`, `poll_duration_ms`, `error_count`                                                                                                                                                                                                                                                                                                               |
+| measurement         | tags                                                           | key fields                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      |
+| ------------------- | -------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `pylontech/cell`    | `chain`, `battery`, `cell`, `barcode`, `battery_id`, `cell_id` | `voltage` V, `current` A, `temperature` °C, `soc` %, `coulomb` Ah, `balancing`, `voltage_delta` V and `temperature_delta` °C (cell minus its battery's mean), `soh` %, `base_state`, `volt_state`, `curr_state`, `temp_state`                                                                                                                                                                                                                                                                                                                                                                                                                   |
+| `pylontech/battery` | `chain`, `battery`, `barcode`, `battery_id`                    | `voltage`, `current`, `temperature`, `temp_low`, `temp_high`, `volt_low`, `volt_high`, `soc`, `coulomb`, `mos_temperature`, `temperature_delta` (battery minus stack mean), `cell_min_voltage`, `cell_max_voltage`, `cell_voltage_spread`, `cell_min_index`, `cell_max_index`, `cell_min_temperature`, `cell_max_temperature`, `cell_temperature_spread`, `cell_count`, `firmware`, `*_state`; from `stat N`: `soh`, `cycle_count`, `power_on_hours`, `shutdown_count`, `reset_count`, `max_charge_volt_diff`, `max_discharge_volt_diff`, `bat_hv_count`, `bat_lv_count`, `bat_ov_count`, `bat_uv_count`, `life_warn_count`, `life_alarm_count` |
+| `pylontech/stack`   | `chain`                                                        | `battery_count`, `cell_count`, `voltage` (avg), `current` (sum), `soc` (min), `cell_min_voltage`, `cell_max_voltage`, `cell_voltage_spread`, `cell_temperature_spread`, `temp_min`, `temp_max`, `poll_duration_ms`, `error_count`                                                                                                                                                                                                                                                                                                                                                                                                               |
 
 `battery_id` (`B01`) and `cell_id` (`C07`) are zero-padded copies of the position tags so that
 series sort correctly as strings. Combine them in Grafana aliases: `$tag_battery_id/$tag_cell_id`
@@ -31,8 +31,10 @@ gives `B01/C07`, `$tag_barcode/$tag_cell_id` gives `P222061C32221950/C07`.
 All numeric fields are SI (volts, amps, °C, Ah). `chain` / `battery` follow the Venus OS
 "Chain X · Battery Y" naming, `battery` being the 1-based position in the stack (the same `N` you'd
 pass to `bat N`). `barcode` is the battery's serial from `info N`, so a module keeps its history if
-it is moved to another slot. `cell_spread` (max − min cell voltage of a module) is the number to
-alarm on.
+it is moved to another slot. `cell_voltage_spread` (max − min cell voltage of a module) is the
+number to alarm on; `cell_temperature_spread` is its temperature twin. **Spread** fields are one
+number per group, max minus min, always ≥ 0. **Delta** fields are one signed number per member,
+member minus the group mean, so they show which cell or battery is off and in which direction.
 
 ---
 
@@ -260,7 +262,7 @@ node on the second output.
     info:  { barcode, deviceName, cellNumber, firmware: { main, soft, boot, comm, board }, raw: {...} },
     power: { voltage, current, temperature, tempLow, tempHigh, voltLow, voltHigh, soc, mosTemperature, states: {...} },
     cells: [{ index, voltage, current, temperature, soc, coulombAh, balancing, soh?, states: {...} }],
-    cellStats: { min, max, spread, minCell, maxCell, count }
+    cellStats: { min, max, mean, spread, minCell, maxCell, count, tempMin, tempMax, tempMean, tempSpread }
   }],
   errors: []
 }
@@ -287,8 +289,11 @@ SELECT voltage FROM "pylontech/cell" WHERE battery = '1' ORDER BY time DESC LIMI
 -- one series per cell, correctly ordered; in Grafana set ALIAS BY to $tag_battery_id/$tag_cell_id
 SELECT mean("voltage") FROM "pylontech/cell" WHERE $timeFilter GROUP BY time($__interval), "battery_id", "cell_id"
 
--- worst cell spread per module over the last day
-SELECT max("cell_spread") FROM "pylontech/battery" WHERE time > now() - 1d GROUP BY "barcode"
+-- worst cell voltage spread per module over the last day
+SELECT max("cell_voltage_spread") FROM "pylontech/battery" WHERE time > now() - 1d GROUP BY "barcode"
+
+-- which cells run warm or cold relative to their module, one lane per cell in a state timeline
+SELECT mean("temperature_delta") FROM "pylontech/cell" WHERE $timeFilter GROUP BY time($__interval), "battery_id", "cell_id"
 ```
 
 Flux:
@@ -298,6 +303,20 @@ from(bucket: "venus")
   |> range(start: -1h)
   |> filter(fn: (r) => r._measurement == "pylontech/cell" and r._field == "voltage")
 ```
+
+### Upgrading from versions that wrote `cell_spread`
+
+Releases before 0.2.0 named the voltage spread `cell_spread` on the battery and stack
+measurements. InfluxDB 1.x cannot rename a field, but it can copy one; with the collector stopped:
+
+```sql
+SELECT "cell_spread" AS "cell_voltage_spread" INTO "pylontech/battery" FROM "pylontech/battery" GROUP BY *
+SELECT "cell_spread" AS "cell_voltage_spread" INTO "pylontech/stack"   FROM "pylontech/stack"   GROUP BY *
+```
+
+`GROUP BY *` keeps the tags so the new field lands on the existing points. The old field stays
+behind, harmless; to get rid of it copy the measurement into a temporary one listing every field
+except `cell_spread`, drop the original and copy back.
 
 ## Supported firmware / output formats
 

@@ -107,12 +107,20 @@ export interface BatteryStat {
 export interface CellStats {
   min: number;
   max: number;
+  /** Mean cell voltage in volts. */
+  mean: number;
   /** max - min in volts. */
   spread: number;
   /** Index (as emitted, see cellIndexBase) of min/max cell. */
   minCell: number;
   maxCell: number;
   count: number;
+  /** Cell temperature statistics in degrees Celsius. */
+  tempMin: number;
+  tempMax: number;
+  tempMean: number;
+  /** tempMax - tempMin. */
+  tempSpread: number;
 }
 
 export interface Battery {

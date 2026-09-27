@@ -43,11 +43,14 @@ export function cellPoints(reading: StackReading, opts: PointOptions): InfluxPoi
   const points: InfluxPoint[] = [];
   for (const b of reading.batteries) {
     const base = batteryTags(reading.chain, b);
+    const s = b.cellStats;
     for (const c of b.cells) {
       const fields = defined({
         voltage: r3(c.voltage),
         current: r3(c.current),
         temperature: r3(c.temperature),
+        voltage_delta: s ? r3(c.voltage - s.mean) : undefined,
+        temperature_delta: s ? r3(c.temperature - s.tempMean) : undefined,
         soc: c.soc,
         coulomb: c.coulombAh === undefined ? undefined : r3(c.coulombAh),
         balancing: c.balancing,
@@ -78,6 +81,9 @@ export function cellPoints(reading: StackReading, opts: PointOptions): InfluxPoi
 
 export function batteryPoints(reading: StackReading, opts: PointOptions): InfluxPoint[] {
   const measurement = `${opts.measurementPrefix}/battery`;
+  const stackTempMean = reading.batteries.length
+    ? reading.batteries.reduce((a, b) => a + b.power.temperature, 0) / reading.batteries.length
+    : undefined;
   return reading.batteries.map((b) => {
     const p = b.power;
     const s = b.cellStats;
@@ -91,12 +97,17 @@ export function batteryPoints(reading: StackReading, opts: PointOptions): Influx
       volt_high: p.voltHigh === undefined ? undefined : r3(p.voltHigh),
       soc: p.soc,
       mos_temperature: p.mosTemperature === undefined ? undefined : r3(p.mosTemperature),
+      temperature_delta:
+        stackTempMean === undefined ? undefined : r3(p.temperature - stackTempMean),
       cell_min_voltage: s?.min,
       cell_max_voltage: s?.max,
-      cell_spread: s?.spread,
+      cell_voltage_spread: s?.spread,
       cell_min_index: s?.minCell,
       cell_max_index: s?.maxCell,
       cell_count: s?.count,
+      cell_min_temperature: s?.tempMin,
+      cell_max_temperature: s?.tempMax,
+      cell_temperature_spread: s?.tempSpread,
       coulomb:
         b.cells.length > 0 && b.cells.every((c) => c.coulombAh !== undefined)
           ? r3(Math.min(...b.cells.map((c) => c.coulombAh!)))
@@ -149,8 +160,14 @@ export function stackPoint(reading: StackReading, opts: PointOptions): InfluxPoi
     soc: socs.length ? Math.min(...socs) : undefined,
     cell_min_voltage: cells.length ? Math.min(...cells.map((c) => c.voltage)) : undefined,
     cell_max_voltage: cells.length ? Math.max(...cells.map((c) => c.voltage)) : undefined,
-    cell_spread: cells.length
+    cell_voltage_spread: cells.length
       ? r3(Math.max(...cells.map((c) => c.voltage)) - Math.min(...cells.map((c) => c.voltage)))
+      : undefined,
+    cell_temperature_spread: cells.length
+      ? r3(
+          Math.max(...cells.map((c) => c.temperature)) -
+            Math.min(...cells.map((c) => c.temperature)),
+        )
       : undefined,
     temp_min: temps.length ? Math.min(...temps) : undefined,
     temp_max: temps.length ? Math.max(...temps) : undefined,
