@@ -304,20 +304,6 @@ from(bucket: "venus")
   |> filter(fn: (r) => r._measurement == "pylontech/cell" and r._field == "voltage")
 ```
 
-### Upgrading from versions that wrote `cell_spread`
-
-Releases before 0.2.0 named the voltage spread `cell_spread` on the battery and stack
-measurements. InfluxDB 1.x cannot rename a field, but it can copy one; with the collector stopped:
-
-```sql
-SELECT "cell_spread" AS "cell_voltage_spread" INTO "pylontech/battery" FROM "pylontech/battery" GROUP BY *
-SELECT "cell_spread" AS "cell_voltage_spread" INTO "pylontech/stack"   FROM "pylontech/stack"   GROUP BY *
-```
-
-`GROUP BY *` keeps the tags so the new field lands on the existing points. The old field stays
-behind, harmless; to get rid of it copy the measurement into a temporary one listing every field
-except `cell_spread`, drop the original and copy back.
-
 ## Supported firmware / output formats
 
 Parsing is header-driven: columns are matched by name, so firmware variants with or without
