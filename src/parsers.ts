@@ -7,7 +7,9 @@
  */
 import type { Battery, BatteryInfo, BatteryStat, Cell, CellStats, PowerRow } from './model.js';
 
-const NOISE_LINES = new Set(['@', '$$', 'pylon>', 'Command completed successfully']);
+const NOISE_LINES = new Set(['@', '$$', 'pylon>']);
+/** `Command completed successfully`, with or without the US3000D's exclamation mark. */
+const COMPLETED_RE = /^Command completed successfully!?$/;
 
 /** Multi-word / punctuated header tokens → single canonical key. */
 const HEADER_ALIASES: Array<[RegExp, string]> = [
@@ -54,6 +56,7 @@ export function bodyLines(raw: string): string[] {
     .map((l) => l.trim())
     .filter((l) => l.length > 0)
     .filter((l) => !NOISE_LINES.has(l))
+    .filter((l) => !COMPLETED_RE.test(l))
     .filter((l) => !/^pylon>/.test(l));
 }
 
@@ -130,6 +133,11 @@ const mAh = (v: string | undefined): number | undefined => {
   const unit = (m[2] ?? 'mAH').toLowerCase();
   return unit === 'ah' ? n : n / 1000;
 };
+const int = (v: string | undefined): number | undefined => {
+  if (v === undefined || v === '-') return undefined;
+  const n = Number.parseInt(v, 10);
+  return Number.isFinite(n) ? n : undefined;
+};
 const req = (v: number | undefined, name: string): number => {
   if (v === undefined) throw new Error(`Missing numeric column ${name}`);
   return v;
@@ -141,9 +149,13 @@ const PWR_KNOWN = new Set([
   'Curr',
   'Tempr',
   'Tlow',
+  'Tlow.Id',
   'Thigh',
+  'Thigh.Id',
   'Vlow',
+  'Vlow.Id',
   'Vhigh',
+  'Vhigh.Id',
   'BaseState',
   'VoltState',
   'CurrState',
@@ -177,6 +189,10 @@ export function parsePwr(raw: string): PowerRow[] {
       tempHigh: milli(r['Thigh']),
       voltLow: milli(r['Vlow']),
       voltHigh: milli(r['Vhigh']),
+      tempLowCell: int(r['Tlow.Id']),
+      tempHighCell: int(r['Thigh.Id']),
+      voltLowCell: int(r['Vlow.Id']),
+      voltHighCell: int(r['Vhigh.Id']),
       soc: percent(r['Coulomb']),
       time: r['Time']?.replace('T', ' '),
       mosTemperature: milli(r['MosTempr']),
@@ -253,14 +269,10 @@ export function parseSoh(raw: string): Map<number, number> {
   return out;
 }
 
-const int = (v: string | undefined): number | undefined => {
-  if (v === undefined) return undefined;
-  const n = Number.parseInt(v, 10);
-  return Number.isFinite(n) ? n : undefined;
-};
-
 /** Parse `info N` output (`Key : Value` lines). */
 export function parseInfo(raw: string): BatteryInfo {
+  // "Invalid command or fail to excute. / Usage:" would otherwise parse as an empty info.
+  if (isUnknownCommand(raw)) throw new UnsupportedCommandError('info');
   const kv = keyValueLines(raw);
   if (Object.keys(kv).length === 0) throw new Error('No key/value lines in info output');
   const get = (re: RegExp): string | undefined => {
@@ -276,7 +288,8 @@ export function parseInfo(raw: string): BatteryInfo {
     specification: get(/^Specification$/i),
     cellNumber: int(get(/^Cell Number$/i)),
     firmware: {
-      board: get(/^Board version$/i),
+      // US3000D prints an empty "Board version" and the actual value under "Board".
+      board: get(/^Board version$/i) || get(/^Board$/i),
       main: get(/^Main Soft version$/i),
       soft: get(/^Soft version$/i),
       boot: get(/^Boot version$/i),

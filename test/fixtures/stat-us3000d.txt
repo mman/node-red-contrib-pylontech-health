@@ -1,0 +1,52 @@
+stat
+@
+Device address           1
+Charge Secs.    :   203471
+Discharge Secs. :   287809
+Charge Times    :    14592
+Discharge Times :    15227
+Idle Times      :    11245
+COC2 Times      :        0
+DOC2 Times      :        0
+COC Times       :        0
+DOC Times       :        0
+COCA Times      :        3
+DOCA Times      :        0
+SC Times        :        0
+Bat OV Times    :        0
+Bat HV Times    :        0
+Bat LV Times    :        0
+Bat UV Times    :        0
+Bat SLP Times   :        0
+Pwr OV Times    :        0
+Pwr HV Times    :        0
+Pwr LV Times    :        0
+Pwr UV Times    :        0
+Pwr SLP Times   :        0
+COT Times       :        0
+CUT Times       :        0
+DOT Times       :        0
+DUT Times       :        0
+CHT Times       :        0
+CLT Times       :        0
+DLT Times       :        0
+DHT Times       :        0
+RV Times        :        0
+Input OV Times  :        0
+SOH Times       :        0
+BMICERR Times   :        0
+CYCLE Times     :     4547
+SOH             :      100
+Dsg Cap         :   305882
+HT@0.5C Secs    :        0
+LT@0.5C Secs    :        0
+HT Secs         :        0
+LT Secs         :        0
+LV Secs         :        0
+SOC LOW Secs    :        0
+Shut Times      :        8
+Reset Times     :        0
+Power on Times  :       14
+Command completed successfully!
+$$
+pylon>

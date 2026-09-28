@@ -35,6 +35,9 @@ interface Settings {
   infoTtlMs: number;
   readSoh: boolean;
   readStat: boolean;
+  /** Learned at runtime: this firmware's `stat` has no index, read it for the master only. */
+  statMasterOnly: boolean;
+  infoMasterOnly: boolean;
   points: PointOptions;
 }
 
@@ -59,6 +62,8 @@ export function readSettings(def: PylontechHealthNodeDef): Settings {
     infoTtlMs: Math.max(0, num(def.refreshInfoEvery, 60)) * 60_000,
     readSoh: bool(def.readSoh, false),
     readStat: bool(def.readStat, true),
+    statMasterOnly: false,
+    infoMasterOnly: false,
     points: {
       measurementPrefix: (def.measurementPrefix ?? '').trim() || 'pylontech',
       cellIndexBase: num(def.cellIndexBase, 1) === 0 ? 0 : 1,
@@ -191,6 +196,8 @@ export function registerPylontechHealth(RED: NodeAPI): void {
             cellIndexBase: settings.points.cellIndexBase,
             readSoh: settings.readSoh,
             readStat: settings.readStat,
+            statMasterOnly: settings.statMasterOnly,
+            infoMasterOnly: settings.infoMasterOnly,
             infoCache,
             infoTtlMs: settings.infoTtlMs,
             refreshInfo: msg.refresh === true,
@@ -206,6 +213,18 @@ export function registerPylontechHealth(RED: NodeAPI): void {
         if (reading.sohUnsupported && settings.readSoh) {
           settings.readSoh = false;
           node.warn('this firmware has no "soh" command; state of health disabled for this node');
+        }
+        if (reading.infoMasterOnly && !settings.infoMasterOnly) {
+          settings.infoMasterOnly = true;
+          node.warn(
+            'this firmware\'s "info" takes no battery index; barcode and firmware known for the master only',
+          );
+        }
+        if (reading.statMasterOnly && !settings.statMasterOnly) {
+          settings.statMasterOnly = true;
+          node.warn(
+            'this firmware\'s "stat" takes no battery index; lifetime statistics read for the master only',
+          );
         }
         if (reading.statUnsupported && settings.readStat) {
           settings.readStat = false;

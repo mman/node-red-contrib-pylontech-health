@@ -222,6 +222,7 @@ describe('runCli', () => {
         'soh-2.txt',
         'stat-1.txt',
         'stat-2.txt',
+        'stat.txt',
       ]);
       expect(readFileSync(join(dir, 'bat-1.txt'), 'utf8')).toMatch(/pylon>$/);
     });

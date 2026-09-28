@@ -26,6 +26,10 @@ export interface PollOptions {
   readSoh: boolean;
   /** Read `stat N` (SOH, cycles, lifetime counters) together with `info N`. Default true. */
   readStat?: boolean;
+  /** The firmware's `stat` takes no index and describes the master only (learned from a previous poll). */
+  statMasterOnly?: boolean;
+  /** Same for `info` (US3000D). */
+  infoMasterOnly?: boolean;
   /** Mutable cache, keyed by stack position. */
   infoCache: Map<number, InfoCacheEntry>;
   infoTtlMs: number;
@@ -42,7 +46,28 @@ export async function pollStack(command: CommandFn, opts: PollOptions): Promise<
   const batteries: Battery[] = [];
   let sohUnsupported = false;
   let statUnsupported = false;
+  let statMasterOnly = opts.statMasterOnly ?? false;
+  let infoMasterOnly = opts.infoMasterOnly ?? false;
   const readStat = opts.readStat ?? true;
+
+  /**
+   * `<cmd> N` on firmware that indexes the command; on firmware whose `info` / `stat`
+   * take no index (US3000D: `info`, `stat [detail]`) fall back to the bare command,
+   * which describes the master. Returns the raw answer and whether the bare form was
+   * the one that worked.
+   */
+  const readIndexed = async (
+    cmd: string,
+    n: number,
+    master: boolean,
+    masterOnly: boolean,
+  ): Promise<{ raw: string; bare: boolean }> => {
+    if (masterOnly) return { raw: await command(cmd), bare: true };
+    const raw = await command(`${cmd} ${n}`);
+    if (!isUnknownCommand(raw) || !master) return { raw, bare: false };
+    const bare = await command(cmd);
+    return { raw: bare, bare: !isUnknownCommand(bare) };
+  };
 
   opts.onProgress?.(0, 0, 'pwr');
   const rows = parsePwr(await command('pwr'));
@@ -57,18 +82,23 @@ export async function pollStack(command: CommandFn, opts: PollOptions): Promise<
       info = cached.info;
       stat = cached.stat;
     } else {
-      opts.onProgress?.(i, total, `info ${n}`);
-      try {
-        info = parseInfo(await command(`info ${n}`));
-      } catch (err) {
-        errors.push(`info ${n}: ${(err as Error).message}`);
-        info = cached?.info;
+      if (!(infoMasterOnly && i > 0)) {
+        opts.onProgress?.(i, total, `info ${n}`);
+        try {
+          const { raw, bare } = await readIndexed('info', n, i === 0, infoMasterOnly);
+          info = parseInfo(raw);
+          if (bare) infoMasterOnly = true;
+        } catch (err) {
+          errors.push(`info ${n}: ${(err as Error).message}`);
+          info = cached?.info;
+        }
       }
-      if (readStat && !statUnsupported) {
+      if (readStat && !statUnsupported && !(statMasterOnly && i > 0)) {
         opts.onProgress?.(i, total, `stat ${n}`);
         try {
-          const raw = await command(`stat ${n}`);
+          const { raw, bare } = await readIndexed('stat', n, i === 0, statMasterOnly);
           if (isUnknownCommand(raw)) throw new UnsupportedCommandError('stat');
+          if (bare) statMasterOnly = true;
           if (isNotPresent(raw)) throw new Error('target device is not present');
           stat = parseStat(raw);
         } catch (err) {
@@ -116,5 +146,7 @@ export async function pollStack(command: CommandFn, opts: PollOptions): Promise<
     errors,
     sohUnsupported,
     statUnsupported,
+    statMasterOnly,
+    infoMasterOnly,
   };
 }

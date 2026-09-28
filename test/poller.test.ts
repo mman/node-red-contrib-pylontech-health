@@ -152,11 +152,72 @@ describe('pollStack stat handling', () => {
 
   it('flags statUnsupported and stops asking when the firmware lacks stat', async () => {
     const unknown = "stat 1\r\n@\r\nUnknown command 'stat' - try 'help'\r\n$$\r\n";
-    const { fn, log } = commandFn({ 'stat 1': unknown, 'stat 2': unknown });
+    const { fn, log } = commandFn({ 'stat 1': unknown, stat: unknown, 'stat 2': unknown });
     const r = await pollStack(fn, base());
     expect(r.statUnsupported).toBe(true);
-    expect(log.filter((c) => c.startsWith('stat'))).toEqual(['stat 1']);
+    expect(log.filter((c) => c.startsWith('stat'))).toEqual(['stat 1', 'stat']);
     expect(r.errors).toEqual(['stat 1: stat: not supported by this firmware']);
+  });
+
+  it('falls back to the bare stat for the master when stat N is rejected (US3000D)', async () => {
+    const rejected = 'stat 1\r\n@\r\nCommand failed\r\n$$\r\n';
+    const { fn, log } = commandFn({ 'stat 1': rejected, stat: fixture('stat-us3000c-b69.txt') });
+    const r = await pollStack(fn, base());
+    expect(log.filter((c) => c.startsWith('stat'))).toEqual(['stat 1', 'stat']);
+    expect(r.statMasterOnly).toBe(true);
+    expect(r.statUnsupported).toBe(false);
+    expect(r.errors).toEqual([]);
+    expect(r.batteries[0]!.stat?.soh).toBe(94);
+    expect(r.batteries[1]!.stat).toBeUndefined();
+  });
+
+  it('asks only the bare stat once statMasterOnly is known', async () => {
+    const { fn, log } = commandFn({ stat: fixture('stat-us3000c-b69.txt') });
+    const r = await pollStack(fn, { ...base(), statMasterOnly: true });
+    expect(log.filter((c) => c.startsWith('stat'))).toEqual(['stat']);
+    expect(r.statMasterOnly).toBe(true);
+    expect(r.batteries[0]!.stat?.cycles).toBe(686);
+    expect(r.batteries[1]!.stat).toBeUndefined();
+  });
+
+  it('flags statUnsupported when both stat N and the bare stat are rejected', async () => {
+    const unknown = "stat\r\n@\r\nUnknown command 'stat' - try 'help'\r\n$$\r\n";
+    const { fn, log } = commandFn({ 'stat 1': unknown, stat: unknown });
+    const r = await pollStack(fn, base());
+    expect(log.filter((c) => c.startsWith('stat'))).toEqual(['stat 1', 'stat']);
+    expect(r.statUnsupported).toBe(true);
+    expect(r.statMasterOnly).toBe(false);
+  });
+
+  it('falls back to the bare info for the master when info N is rejected (US3000D)', async () => {
+    const { fn, log } = commandFn({
+      'info 1': fixture('info-1-rejected-us3000d.txt'),
+      info: fixture('info-us3000d.txt'),
+      'stat 1': fixture('stat-1-rejected-us3000d.txt'),
+      stat: fixture('stat-us3000d.txt'),
+    });
+    const r = await pollStack(fn, base());
+    expect(log).toEqual(['pwr', 'info 1', 'info', 'stat 1', 'stat', 'bat 1', 'bat 2']);
+    expect(r.infoMasterOnly).toBe(true);
+    expect(r.statMasterOnly).toBe(true);
+    expect(r.errors).toEqual([]);
+    expect(r.batteries[0]!.info?.barcode).toBe('Y251121C8P160585');
+    expect(r.batteries[0]!.info?.firmware.main).toBe('B1.4.0.0');
+    expect(r.batteries[0]!.stat?.cycles).toBe(4547);
+    expect(r.batteries[1]!.info).toBeUndefined();
+    expect(r.batteries[1]!.stat).toBeUndefined();
+  });
+
+  it('asks only the bare info and stat once the master-only flags are known', async () => {
+    const { fn, log } = commandFn({
+      info: fixture('info-us3000d.txt'),
+      stat: fixture('stat-us3000d.txt'),
+    });
+    const r = await pollStack(fn, { ...base(), infoMasterOnly: true, statMasterOnly: true });
+    expect(log).toEqual(['pwr', 'info', 'stat', 'bat 1', 'bat 2']);
+    expect(r.infoMasterOnly).toBe(true);
+    expect(r.batteries[0]!.info?.deviceName).toBe('US3000D');
+    expect(r.batteries[1]!.info).toBeUndefined();
   });
 
   it('records a not-present answer as an error without disabling stat', async () => {

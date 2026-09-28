@@ -174,6 +174,45 @@ describe('real US3000C firmware B69.25.0.0 captures', () => {
   });
 });
 
+describe('US3000D master pwr with Tlow.Id / Thigh.Id / Vlow.Id / Vhigh.Id columns', () => {
+  it('parses six batteries and the extreme-cell index columns', () => {
+    const rows = parsePwr(fixture('pwr-us3000d.txt'));
+    expect(rows).toHaveLength(6);
+    const r = rows[0]!;
+    expect(r.position).toBe(1);
+    expect(r.voltage).toBeCloseTo(52.382);
+    expect(r.current).toBeCloseTo(-0.391);
+    expect(r.temperature).toBeCloseTo(28.8);
+    expect(r.tempLow).toBeCloseTo(25.4);
+    expect(r.tempLowCell).toBe(5);
+    expect(r.tempHigh).toBe(26);
+    expect(r.tempHighCell).toBe(0);
+    expect(r.voltLow).toBeCloseTo(3.481);
+    expect(r.voltLowCell).toBe(2);
+    expect(r.voltHigh).toBeCloseTo(3.497);
+    expect(r.voltHighCell).toBe(10);
+    expect(r.states.base).toBe('Dischg');
+    expect(r.soc).toBe(99);
+    expect(r.time).toBe('2026-09-28 12:16:26');
+    expect(r.mosTemperature).toBeCloseTo(31.8);
+    expect(r.states.mt).toBe('Normal');
+    expect(r.extra).toEqual({});
+    const last = rows[5]!;
+    expect(last.position).toBe(6);
+    expect(last.tempLowCell).toBe(10);
+    expect(last.tempHighCell).toBe(13);
+    expect(last.voltLowCell).toBe(10);
+    expect(last.voltHighCell).toBe(13);
+    expect(last.soc).toBe(100);
+  });
+
+  it('leaves the index columns undefined on firmware without them', () => {
+    const r = parsePwr(fixture('pwr-us3000c-b69.txt'))[0]!;
+    expect(r.tempLowCell).toBeUndefined();
+    expect(r.voltHighCell).toBeUndefined();
+  });
+});
+
 describe('real US3000C firmware B69.25.0.0 bat capture', () => {
   it('parses 15 cells with per-cell SOC, coulomb and balancing flags', () => {
     const cells = parseBat(fixture('bat-us3000c-b69.txt'));
@@ -245,6 +284,65 @@ describe('parseStat (real US3000C B69.25.0.0 capture)', () => {
     expect(isUnknownCommand(fixture('soh-unsupported.txt'))).toBe(true);
     expect(isUnknownCommand(fixture('bat-absent.txt'))).toBe(true);
     expect(isUnknownCommand(fixture('pwr-us3000c-b69.txt'))).toBe(false);
+  });
+});
+
+describe('US3000D master (firmware 1.1) captures', () => {
+  it('parses the bare stat: SOH, cycles and counters, no power-on hours or volt diffs', () => {
+    const st = parseStat(fixture('stat-us3000d.txt'));
+    expect(st).toMatchObject({
+      soh: 100,
+      cycles: 4547,
+      shutdowns: 8,
+      resets: 0,
+      batteryHighVoltageEvents: 0,
+      batteryLowVoltageEvents: 0,
+      batteryOverVoltageEvents: 0,
+      batteryUnderVoltageEvents: 0,
+    });
+    expect(st.powerOnHours).toBeUndefined();
+    expect(st.maxChargeVoltDiff).toBeUndefined();
+    expect(st.lifeWarnings).toBeUndefined();
+    expect(st.raw['Device address']).toBe('1');
+    expect(st.raw['Power on Times']).toBe('14');
+    expect(st.raw['Dsg Cap']).toBe('305882');
+    // "Command completed successfully!" (with the bang) must not leak into the map
+    expect(Object.keys(st.raw).some((k) => /Command completed/.test(k))).toBe(false);
+  });
+
+  it('does not mistake stat detail (no SOH, no cycles) for statistics', () => {
+    expect(() => parseStat(fixture('stat-detail-us3000d.txt'))).toThrow(/No statistics/);
+  });
+
+  it('parses the bare info, taking the board from "Board" when "Board version" is empty', () => {
+    const info = parseInfo(fixture('info-us3000d.txt'));
+    expect(info).toMatchObject({
+      deviceAddress: 1,
+      deviceName: 'US3000D',
+      barcode: 'Y251121C8P160585',
+      specification: '48V/74AH',
+      cellNumber: 15,
+      firmware: {
+        board: 'NF4.E3',
+        main: 'B1.4.0.0',
+        soft: 'V1.1',
+        boot: 'V0.02',
+        comm: 'V2.0',
+        releaseDate: '25-11-13',
+      },
+    });
+    expect(info.pcbaBarcode).toBeUndefined();
+  });
+
+  it('rejects "Invalid command or fail to excute" answers instead of parsing an empty info', () => {
+    const info1 = fixture('info-1-rejected-us3000d.txt');
+    const stat1 = fixture('stat-1-rejected-us3000d.txt');
+    expect(isUnknownCommand(info1)).toBe(true);
+    expect(isUnknownCommand(stat1)).toBe(true);
+    expect(() => parseInfo(info1)).toThrow(/not supported/);
+    expect(() => parseStat(stat1)).toThrow(/No statistics/);
+    expect(isUnknownCommand(fixture('info-us3000d.txt'))).toBe(false);
+    expect(isUnknownCommand(fixture('help-us3000d.txt'))).toBe(false);
   });
 });
 

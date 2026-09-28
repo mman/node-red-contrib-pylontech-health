@@ -1,0 +1,12 @@
+pwr
+@
+Power Volt   Curr   Tempr  Tlow   Tlow.Id  Thigh  Thigh.Id Vlow   Vlow.Id  Vhigh  Vhigh.Id Base.St  Volt.St  Curr.St  Temp.St  Coulomb  Time                 B.V.St   B.T.St   MosTempr M.T.St  
+1     52382  -391   28800  25400  5        26000  0        3481   2        3497   10       Dischg   Normal   Normal   Normal   99%      2026-09-28 12:16:26  Normal   Normal   31800    Normal  
+2     52426  -610   28400  25000  5        25700  2        3485   12       3500   2        Charge   Normal   Normal   Normal   99%      2026-09-28 12:16:25  Normal   Normal   28500    Normal  
+3     52384  311    29100  24500  5        24800  3        3471   7        3498   3        Charge   Normal   Normal   Normal   100%     2026-09-28 12:16:25  Normal   Normal   26300    Normal  
+4     52379  290    27200  24600  5        24700  8        3473   7        3497   8        Charge   Normal   Normal   Normal   100%     2026-09-28 12:16:25  Normal   Normal   26200    Normal  
+5     52397  351    27100  24300  5        24600  3        3479   13       3495   3        Charge   Normal   Normal   Normal   100%     2026-09-28 12:16:25  Normal   Normal   25900    Normal  
+6     52390  326    31900  24100  10       24500  13       3471   10       3499   13       Charge   Normal   Normal   Normal   100%     2026-09-28 12:16:25  Normal   Normal   26500    Normal  
+Command completed successfully
+$$
+pylon>

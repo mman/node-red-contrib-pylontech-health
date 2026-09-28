@@ -55,6 +55,14 @@ export interface PowerRow {
   tempHigh: number | undefined;
   voltLow: number | undefined;
   voltHigh: number | undefined;
+  /**
+   * Cell index (as reported, 0-based) of the coldest / warmest / lowest / highest cell.
+   * Only on firmware that prints the `Tlow.Id` … `Vhigh.Id` columns (e.g. US3000D).
+   */
+  tempLowCell: number | undefined;
+  tempHighCell: number | undefined;
+  voltLowCell: number | undefined;
+  voltHighCell: number | undefined;
   soc: number | undefined;
   /** Battery-reported timestamp, raw string. */
   time: string | undefined;
@@ -146,6 +154,13 @@ export interface StackReading {
   sohUnsupported?: boolean;
   /** Set when the firmware rejected `stat N`; callers should stop asking. */
   statUnsupported?: boolean;
+  /**
+   * Set when the firmware rejected `stat N` but answered the bare `stat` (US3000D: `stat [detail]`),
+   * which describes the master only; callers should pass it back so slaves are not asked again.
+   */
+  statMasterOnly?: boolean;
+  /** Same for `info N` vs the bare `info` (US3000D): barcode and firmware known for the master only. */
+  infoMasterOnly?: boolean;
 }
 
 /** Point shape accepted by node-red-contrib-influxdb "influxdb batch" nodes. */

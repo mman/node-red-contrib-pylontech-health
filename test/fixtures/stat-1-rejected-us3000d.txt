@@ -1,0 +1,8 @@
+stat 1
+@
+
+Invalid command or fail to excute!
+Usage:
+Statistic data show - stat/stat [detail]
+$$
+pylon>

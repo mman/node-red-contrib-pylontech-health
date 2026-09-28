@@ -1,5 +1,5 @@
 /** Convert a StackReading into InfluxDB points for node-red-contrib-influxdb batch nodes. */
-import type { Battery, InfluxPoint, PointOptions, StackReading } from './model.js';
+import type { Battery, Cell, InfluxPoint, PointOptions, StackReading } from './model.js';
 
 const r3 = (n: number): number => Number(n.toFixed(3));
 
@@ -20,6 +20,26 @@ function firmwareString(b: Battery): string | undefined {
   const fw = b.info?.firmware;
   if (!fw) return undefined;
   return [fw.main, fw.soft].filter(Boolean).join('/') || undefined;
+}
+
+/** Shift a battery-reported (0-based) cell index to the configured numbering. */
+const cellIndex = (i: number | undefined, base: 0 | 1): number | undefined =>
+  i === undefined ? undefined : i + base;
+
+/**
+ * Coulomb counter of a cell, or undefined when the firmware did not really report it.
+ * A US3000D master prints `0 mAH` for every cell of its slave batteries while their SOC
+ * is 99 %; a zero counter next to a non-zero SOC is impossible, so treat it as missing.
+ */
+const reportedCoulomb = (c: Cell): number | undefined =>
+  c.coulombAh === undefined || (c.coulombAh === 0 && (c.soc ?? 0) > 0) ? undefined : c.coulombAh;
+
+/** Battery coulomb = min over cells, only when every cell reported one. */
+function batteryCoulomb(cells: Cell[]): number | undefined {
+  if (cells.length === 0) return undefined;
+  const values = cells.map(reportedCoulomb);
+  if (values.some((v) => v === undefined)) return undefined;
+  return r3(Math.min(...(values as number[])));
 }
 
 const pad2 = (n: number): string => String(n).padStart(2, '0');
@@ -52,7 +72,7 @@ export function cellPoints(reading: StackReading, opts: PointOptions): InfluxPoi
         voltage_delta: s ? r3(c.voltage - s.mean) : undefined,
         temperature_delta: s ? r3(c.temperature - s.tempMean) : undefined,
         soc: c.soc,
-        coulomb: c.coulombAh === undefined ? undefined : r3(c.coulombAh),
+        coulomb: reportedCoulomb(c) === undefined ? undefined : r3(reportedCoulomb(c)!),
         balancing: c.balancing,
         soh: c.soh,
         ...(opts.includeStates
@@ -97,6 +117,10 @@ export function batteryPoints(reading: StackReading, opts: PointOptions): Influx
       temp_high: p.tempHigh === undefined ? undefined : r3(p.tempHigh),
       volt_low: p.voltLow === undefined ? undefined : r3(p.voltLow),
       volt_high: p.voltHigh === undefined ? undefined : r3(p.voltHigh),
+      temp_low_index: cellIndex(p.tempLowCell, opts.cellIndexBase),
+      temp_high_index: cellIndex(p.tempHighCell, opts.cellIndexBase),
+      volt_low_index: cellIndex(p.voltLowCell, opts.cellIndexBase),
+      volt_high_index: cellIndex(p.voltHighCell, opts.cellIndexBase),
       soc: p.soc,
       mos_temperature: p.mosTemperature === undefined ? undefined : r3(p.mosTemperature),
       temperature_delta:
@@ -110,10 +134,7 @@ export function batteryPoints(reading: StackReading, opts: PointOptions): Influx
       cell_min_temperature: s?.tempMin,
       cell_max_temperature: s?.tempMax,
       cell_temperature_spread: s?.tempSpread,
-      coulomb:
-        b.cells.length > 0 && b.cells.every((c) => c.coulombAh !== undefined)
-          ? r3(Math.min(...b.cells.map((c) => c.coulombAh!)))
-          : undefined,
+      coulomb: batteryCoulomb(b.cells),
       firmware: firmwareString(b),
       soh: b.stat?.soh,
       cycle_count: b.stat?.cycles,

@@ -227,6 +227,84 @@ describe('delta and spread fields', () => {
   });
 });
 
+describe('pwr extreme-cell index fields', () => {
+  const stack = (indexBase: 0 | 1): StackReading => ({
+    chain: 1,
+    polledAt: new Date('2026-09-28T10:16:26Z'),
+    durationMs: 2200,
+    batteries: parsePwr(fixture('pwr-us3000d.txt')).map((p) =>
+      assembleBattery(p, undefined, [], indexBase),
+    ),
+    errors: [],
+  });
+
+  it('emits temp/volt low/high indices shifted to the configured cell numbering', () => {
+    const pts = batteryPoints(stack(1), { ...opts, cellIndexBase: 1 });
+    expect(pts).toHaveLength(6);
+    expect(pts[0]!.fields).toMatchObject({
+      temp_low_index: 6,
+      temp_high_index: 1,
+      volt_low_index: 3,
+      volt_high_index: 11,
+    });
+    expect(batteryPoints(stack(0), { ...opts, cellIndexBase: 0 })[0]!.fields).toMatchObject({
+      temp_low_index: 5,
+      temp_high_index: 0,
+      volt_low_index: 2,
+      volt_high_index: 10,
+    });
+  });
+
+  it('omits the index fields on firmware that does not print them', () => {
+    const p = batteryPoints(reading(), opts)[0]!;
+    expect(p.fields).not.toHaveProperty('temp_low_index');
+    expect(p.fields).not.toHaveProperty('volt_high_index');
+  });
+});
+
+describe('coulomb not reported for slave batteries', () => {
+  const stack = (): StackReading => {
+    const pwr = parsePwr(fixture('pwr-us3000d.txt')).slice(0, 2);
+    const master = parseBat(fixture('bat-dtemp-ctemp-1.txt'));
+    const slave = parseBat(fixture('bat-dtemp-ctemp-2.txt'));
+    return {
+      chain: 1,
+      polledAt: new Date('2026-09-28T10:16:26Z'),
+      durationMs: 2200,
+      batteries: [
+        assembleBattery(pwr[0]!, undefined, master, 1),
+        assembleBattery(pwr[1]!, undefined, slave, 1),
+      ],
+      errors: [],
+    };
+  };
+
+  it('omits coulomb when the firmware prints 0 mAH next to a non-zero SOC', () => {
+    const cells = cellPoints(stack(), opts);
+    expect(cells[0]!.fields).toMatchObject({ coulomb: 73.1, soc: 99 });
+    const slaveCell = cells.find((p) => p.tags['battery'] === '2')!;
+    expect(slaveCell.fields['soc']).toBe(99);
+    expect(slaveCell.fields).not.toHaveProperty('coulomb');
+    const bats = batteryPoints(stack(), opts);
+    expect(bats[0]!.fields['coulomb']).toBe(73.1);
+    expect(bats[1]!.fields).not.toHaveProperty('coulomb');
+  });
+
+  it('keeps a genuine 0 Ah when SOC is 0 too', () => {
+    const cell = { ...parseBat(fixture('bat-dtemp-ctemp-2.txt'))[0]!, soc: 0 };
+    const b = assembleBattery(parsePwr(fixture('pwr-us3000d.txt'))[1]!, undefined, [cell], 1);
+    const reading: StackReading = {
+      chain: 1,
+      polledAt: new Date('2026-09-28T10:16:26Z'),
+      durationMs: 1,
+      batteries: [b],
+      errors: [],
+    };
+    expect(cellPoints(reading, opts)[0]!.fields['coulomb']).toBe(0);
+    expect(batteryPoints(reading, opts)[0]!.fields['coulomb']).toBe(0);
+  });
+});
+
 describe('dtemp/ctemp state fields', () => {
   it('emits dtemp_state and ctemp_state only when the firmware reports them', () => {
     const pwr = parsePwr(fixture('pwr-us3000c-b69.txt'));

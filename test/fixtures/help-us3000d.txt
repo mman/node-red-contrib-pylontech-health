@@ -1,0 +1,21 @@
+help
+@
+
+disp       - Display Info at regular intervals - disp [(pwrs pwrNo)/val]/[(bats batNo)/volt/curr/temp]
+soxinfo    - soxinfo[1/0]
+bat        - Battery data show - bat [pwr][index]
+
+datalist   - datalist [show/showt/clear/save] <warn0/warn1/warn2/perday/permon/peryear> <index> <0/1>
+help       - help
+pwr        - Power data show - pwr [index]
+stat       - Statistic data show - stat/stat [detail]
+trst       - Test Soft Reset - trst
+shut       - Shut down - shut
+euro       - dsplay Euro stat list - euro
+updata     - updata system - updata
+info       - Device infomation - info
+trace      - Read traces = trace [print/clear/level/default]/[>>/!]/[module name] [level]
+record     - Read records = record [clear]
+Command completed successfully
+$$
+pylon>

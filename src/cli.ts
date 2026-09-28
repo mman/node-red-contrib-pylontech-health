@@ -256,6 +256,8 @@ export async function runCli(argv: string[], io: CliIO, deps: CliDeps = {}): Pro
             if (opts.readStat) await save(`stat ${r.position}`);
             if (opts.readSoh) await save(`soh ${r.position}`);
           }
+          // Firmware whose stat takes no index (US3000D) answers only the bare command.
+          if (opts.readStat) await save('stat');
           return saved;
         });
         io.out(json({ dir, files }));

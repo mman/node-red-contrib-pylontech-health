@@ -1,0 +1,8 @@
+info 1
+@
+
+Invalid command or fail to excute.
+Usage:
+Device infomation - info
+$$
+pylon>

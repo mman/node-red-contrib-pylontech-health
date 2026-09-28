@@ -1,6 +1,6 @@
 {
   "name": "node-red-contrib-pylontech-health",
-  "version": "0.2.1",
+  "version": "0.3.0",
   "description": "Node-RED node that reads per-cell health data from Pylontech batteries over the console port and emits InfluxDB points. Built for Venus OS (Cerbo GX).",
   "keywords": [
     "node-red",

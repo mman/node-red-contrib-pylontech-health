@@ -1,0 +1,34 @@
+stat detail
+@
+Device address           1
+Low SOC1 Secs   :        0
+Low SOC2 Secs   :        0
+Low SOC3 Secs   :        0
+Low Temp1 Secs  :        0
+High Temp1 Secs :        0
+High Temp2 Secs :        0
+High Temp3 Secs :        0
+High Temp4 Secs :        0
+High Temp5 Secs :        0
+COV1 Secs       :        0
+COV2 Secs       :        0
+COV3 Secs       :        0
+DUV1 Secs       :        0
+DUV2 Secs       :        0
+DUV3 Secs       :        0
+High SOC1 Secs  :        0
+High SOC2 Secs  :      388
+High SOC3 Secs  :      184
+COC1 Secs       :        0
+COC2 Secs       :        0
+COC3 Secs       :        0
+COC4 Secs       :        0
+COC5 Secs       :        0
+COC6 Secs       :      634
+COC7 Secs       :        0
+COC8 Secs       :       73
+DOC1 Secs       :        0
+DOC2 Secs       :        0
+Command completed successfully!
+$$
+pylon>
