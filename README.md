@@ -49,6 +49,17 @@ bleeding the high cells one by one.
 
 ![Passive cell balancing over time](https://raw.githubusercontent.com/mman/node-red-contrib-pylontech-health/main/docs/pylontech_cell_balancing.png)
 
+The panels behind these screenshots are in [`examples/`](examples/) as Grafana panel JSON:
+`grafana-soc-by-battery.json`, `grafana-voltage-spread-by-battery.json`,
+`grafana-temperature-delta-by-battery.json`, `grafana-cell-voltage.json`, plus
+`grafana-pwr-table.json`, a table that lays out the newest `pylontech/battery` point per module
+like the console's `pwr` output. They can be used as they are with the latest
+[Victron venus-docker-grafana](https://github.com/victronenergy/venus-docker-grafana), which ships
+Grafana 13 and InfluxDB 1.x: point the **influxdb batch** node of the example flow at the InfluxDB
+that venus-grafana configures (database `venus`), and the panels find their data through the
+`datasource-influxdb` datasource that venus-grafana provisions. To add one, create an empty panel
+on a dashboard, open _Inspect → Panel JSON_, replace the contents with the file and apply.
+
 Per poll the node runs `pwr` → `info N` + `stat N` (cached, hourly) → `bat N` (→ `soh N`, optional) for
 every battery in the stack and produces three measurements:
 
