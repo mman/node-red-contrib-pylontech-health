@@ -54,7 +54,7 @@ The panels behind these screenshots are in [`examples/`](examples/) as Grafana p
 `grafana-temperature-delta-by-battery.json`, `grafana-cell-voltage.json`, plus
 `grafana-pwr-table.json`, a table that lays out the newest `pylontech/battery` point per module
 like the console's `pwr` output. They can be used as they are with the latest
-[Victron venus-docker-grafana](https://github.com/victronenergy/venus-docker-grafana), which ships
+[Victron venus-grafana](https://github.com/victronenergy/venus-grafana), which ships
 Grafana 13 and InfluxDB 1.x: point the **influxdb batch** node of the example flow at the InfluxDB
 that venus-grafana configures (database `venus`), and the panels find their data through the
 `datasource-influxdb` datasource that venus-grafana provisions. To add one, create an empty panel
