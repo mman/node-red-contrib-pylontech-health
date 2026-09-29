@@ -1,0 +1,126 @@
+{
+  "kind": "Panel",
+  "spec": {
+    "id": 8,
+    "title": "Pylontech Cell Voltage Delta to Battery",
+    "description": "Each cell's voltage minus the mean of its own battery (pylontech/cell voltage_delta, in mV). Green is within ±5 mV of the module. Blue shades are cells below their module, i.e. holding less charge: the ones that reach the low knee first and lag at the top of charge. Yellow to red shades are cells above their module: the ones that hit the high-voltage limit first. Judge at rest (current ≈ 0) after an hour of relaxation; under load or during absorption a ±30 mV spread is normal.",
+    "links": [],
+    "data": {
+      "kind": "QueryGroup",
+      "spec": {
+        "queries": [
+          {
+            "kind": "PanelQuery",
+            "spec": {
+              "query": {
+                "kind": "DataQuery",
+                "version": "v0",
+                "group": "influxdb",
+                "datasource": {
+                  "name": "datasource-influxdb"
+                },
+                "spec": {
+                  "alias": "$tag_battery_id / $tag_cell_id",
+                  "query": "SELECT mean(\"voltage_delta\") * 1000\nFROM \"pylontech/cell\"\nWHERE $timeFilter\nGROUP BY time($__interval), \"battery_id\", \"cell_id\" fill(previous)",
+                  "rawQuery": true,
+                  "resultFormat": "time_series"
+                }
+              },
+              "refId": "A",
+              "hidden": false
+            }
+          }
+        ],
+        "transformations": [],
+        "queryOptions": {}
+      }
+    },
+    "vizConfig": {
+      "kind": "VizConfig",
+      "group": "state-timeline",
+      "version": "13.2.2",
+      "spec": {
+        "options": {
+          "mergeValues": false,
+          "showValue": "auto",
+          "alignValue": "left",
+          "rowHeight": 0.9,
+          "legend": {
+            "showLegend": true,
+            "displayMode": "list",
+            "placement": "bottom"
+          },
+          "tooltip": {
+            "mode": "single",
+            "sort": "none",
+            "hideZeros": false
+          }
+        },
+        "fieldConfig": {
+          "defaults": {
+            "custom": {
+              "lineWidth": 0,
+              "fillOpacity": 70,
+              "spanNulls": false,
+              "insertNulls": false,
+              "hideFrom": {
+                "tooltip": false,
+                "viz": false,
+                "legend": false
+              },
+              "axisPlacement": "auto"
+            },
+            "color": {
+              "mode": "thresholds",
+              "seriesBy": "last"
+            },
+            "thresholds": {
+              "mode": "absolute",
+              "steps": [
+                {
+                  "value": null,
+                  "color": "dark-blue"
+                },
+                {
+                  "value": -30,
+                  "color": "blue"
+                },
+                {
+                  "value": -20,
+                  "color": "light-blue"
+                },
+                {
+                  "value": -10,
+                  "color": "super-light-blue"
+                },
+                {
+                  "value": -5,
+                  "color": "green"
+                },
+                {
+                  "value": 5,
+                  "color": "super-light-yellow"
+                },
+                {
+                  "value": 10,
+                  "color": "yellow"
+                },
+                {
+                  "value": 20,
+                  "color": "orange"
+                },
+                {
+                  "value": 30,
+                  "color": "red"
+                }
+              ]
+            },
+            "unit": "mvolt",
+            "decimals": 1
+          },
+          "overrides": []
+        }
+      }
+    }
+  }
+}

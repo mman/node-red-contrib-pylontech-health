@@ -51,7 +51,9 @@ bleeding the high cells one by one.
 
 The panels behind these screenshots are in [`examples/`](examples/) as Grafana panel JSON:
 `grafana-soc-by-battery.json`, `grafana-voltage-spread-by-battery.json`,
-`grafana-temperature-delta-by-battery.json`, `grafana-cell-voltage.json`, plus
+`grafana-temperature-delta-by-battery.json`, `grafana-cell-voltage.json`,
+`grafana-cell-voltage-delta.json` (every cell minus its battery's mean, the chart that separates a cell
+that is really behind from one that only looks so on an absolute scale), plus
 `grafana-pwr-table.json`, a table that lays out the newest `pylontech/battery` point per module
 like the console's `pwr` output. They can be used as they are with the latest
 [Victron venus-grafana](https://github.com/victronenergy/venus-grafana), which ships
