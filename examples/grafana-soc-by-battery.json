@@ -1,0 +1,218 @@
+{
+  "kind": "Panel",
+  "spec": {
+    "id": 7,
+    "title": "SoC by Battery",
+    "description": "",
+    "links": [],
+    "data": {
+      "kind": "QueryGroup",
+      "spec": {
+        "queries": [
+          {
+            "kind": "PanelQuery",
+            "spec": {
+              "query": {
+                "kind": "DataQuery",
+                "version": "v0",
+                "group": "influxdb",
+                "datasource": {
+                  "name": "datasource-influxdb"
+                },
+                "spec": {
+                  "alias": "$tag_battery_id",
+                  "groupBy": [
+                    {
+                      "params": [
+                        "$__interval"
+                      ],
+                      "type": "time"
+                    },
+                    {
+                      "params": [
+                        "battery_id::tag"
+                      ],
+                      "type": "tag"
+                    },
+                    {
+                      "params": [
+                        "previous"
+                      ],
+                      "type": "fill"
+                    }
+                  ],
+                  "measurement": "pylontech/battery",
+                  "orderByTime": "ASC",
+                  "policy": "default",
+                  "resultFormat": "time_series",
+                  "select": [
+                    [
+                      {
+                        "params": [
+                          "soc"
+                        ],
+                        "type": "field"
+                      },
+                      {
+                        "params": [],
+                        "type": "mean"
+                      }
+                    ]
+                  ],
+                  "tags": []
+                }
+              },
+              "refId": "A",
+              "hidden": false
+            }
+          }
+        ],
+        "transformations": [],
+        "queryOptions": {}
+      }
+    },
+    "vizConfig": {
+      "kind": "VizConfig",
+      "group": "timeseries",
+      "version": "13.2.2",
+      "spec": {
+        "options": {
+          "tooltip": {
+            "mode": "multi",
+            "sort": "none",
+            "hideZeros": false
+          },
+          "legend": {
+            "showLegend": true,
+            "displayMode": "list",
+            "placement": "bottom",
+            "calcs": [
+              "last"
+            ]
+          }
+        },
+        "fieldConfig": {
+          "defaults": {
+            "custom": {
+              "drawStyle": "line",
+              "lineInterpolation": "linear",
+              "barAlignment": 0,
+              "barWidthFactor": 0.6,
+              "lineWidth": 1,
+              "fillOpacity": 25,
+              "gradientMode": "none",
+              "spanNulls": false,
+              "insertNulls": false,
+              "showPoints": "auto",
+              "showValues": false,
+              "pointSize": 5,
+              "stacking": {
+                "mode": "normal",
+                "group": "A"
+              },
+              "axisPlacement": "auto",
+              "axisLabel": "",
+              "axisColorMode": "text",
+              "axisBorderShow": false,
+              "scaleDistribution": {
+                "type": "linear"
+              },
+              "axisCenteredZero": false,
+              "hideFrom": {
+                "tooltip": false,
+                "viz": false,
+                "legend": false
+              },
+              "thresholdsStyle": {
+                "mode": "off"
+              }
+            },
+            "color": {
+              "mode": "thresholds"
+            },
+            "thresholds": {
+              "mode": "absolute",
+              "steps": [
+                {
+                  "value": null,
+                  "color": "blue"
+                },
+                {
+                  "value": 20,
+                  "color": "super-light-green"
+                },
+                {
+                  "value": 25,
+                  "color": "light-green"
+                },
+                {
+                  "value": 30,
+                  "color": "green"
+                },
+                {
+                  "value": 35,
+                  "color": "semi-dark-green"
+                },
+                {
+                  "value": 40,
+                  "color": "dark-green"
+                },
+                {
+                  "value": 45,
+                  "color": "super-light-yellow"
+                },
+                {
+                  "value": 50,
+                  "color": "light-yellow"
+                },
+                {
+                  "value": 55,
+                  "color": "yellow"
+                },
+                {
+                  "value": 60,
+                  "color": "semi-dark-yellow"
+                },
+                {
+                  "value": 65,
+                  "color": "dark-yellow"
+                },
+                {
+                  "value": 70,
+                  "color": "super-light-orange"
+                },
+                {
+                  "value": 75,
+                  "color": "light-orange"
+                },
+                {
+                  "value": 80,
+                  "color": "orange"
+                },
+                {
+                  "value": 85,
+                  "color": "semi-dark-orange"
+                },
+                {
+                  "value": 90,
+                  "color": "dark-orange"
+                },
+                {
+                  "value": 95,
+                  "color": "super-light-red"
+                },
+                {
+                  "value": 100,
+                  "color": "light-red"
+                }
+              ]
+            },
+            "unit": "percent",
+            "min": 0
+          },
+          "overrides": []
+        }
+      }
+    }
+  }
+}
