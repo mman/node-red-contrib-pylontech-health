@@ -5,14 +5,47 @@ UP2500 / US5000 / Force …) over the master battery's **console port** and emit
 **InfluxDB points**. Built to run inside Node-RED on a **Victron Cerbo GX** (Venus OS Large ≥ 3.80),
 but works on any Node-RED ≥ 3 with Node.js ≥ 22.
 
-The data it collects is meant for charts like these, here from Grafana over InfluxDB. The first
-one is a state timeline of every cell's voltage over time, showing how the cells of a battery
-charge and discharge and how far apart they sit; the second shows the BMS's passive balancing
-in action, cell by cell, over the same period. This particular battery was rebuilt from packs at
-different states of charge and is being top-balanced; a fully balanced pack, and a stack with
-several batteries, will replace these pictures later.
+This package lets you assess the health of your Pylontech batteries by periodically collecting
+every important metric the BMS exposes on its console (per-cell voltage, current, temperature,
+SOC, balancing state, plus the per-battery and per-stack aggregates) and visualizing them over
+time in Grafana. The charts below come from a six-battery stack over one day: discharging through
+the evening, sitting at low SOC overnight, charging again in the morning.
 
-![Cell voltage over time](https://raw.githubusercontent.com/mman/node-red-contrib-pylontech-health/main/docs/pylontech_cell_voltage.png)
+**State of charge by battery.** Stacked `soc` from `pylontech/battery`, one band per module. All
+six discharge and recharge together; a module that drifts away from the others here is the first
+sign that its capacity or its coulomb counter is off.
+
+![SOC by battery](https://raw.githubusercontent.com/mman/node-red-contrib-pylontech-health/main/docs/pylontech_stack_soc_by_battery.png)
+
+**Cell voltage spread by battery.** `cell_voltage_spread` from `pylontech/battery`, the max minus
+min cell voltage of each module, as a state timeline. Healthy modules stay under 20 mV. At low SOC
+the weaker cells of B03 and B06 fall away from the rest and the spread climbs past 30 mV; it closes
+again as soon as charging starts.
+
+![Cell voltage spread by battery](https://raw.githubusercontent.com/mman/node-red-contrib-pylontech-health/main/docs/pylontech_stack_voltage_spread_by_battery.png)
+
+**Temperature delta by battery.** `temperature_delta` from `pylontech/battery`, each module's
+temperature minus the stack mean. The signed value shows which module runs warm or cold and by how
+much: here B01 sits about a degree above the stack and B06 two to three degrees below it, which
+is what you would expect from the modules at the top and bottom of a rack.
+
+![Temperature delta by battery](https://raw.githubusercontent.com/mman/node-red-contrib-pylontech-health/main/docs/pylontech_stack_temperature_delta_by_battery.png)
+
+**Every cell of the stack.** `voltage` from `pylontech/cell`, one lane per cell, aliased
+`$tag_battery_id/$tag_cell_id` so the 90 lanes sort as B01/C01 … B06/C15. Full cells are orange,
+the mid-charge plateau is green, and the weak cells stand out as blue lanes when the stack is
+nearly empty: cells 4 and 7–11 of B03 and cell 11 of B06 drop below 3.15 V while their neighbours
+hold 3.2 V. This is the chart that tells you _which_ cell is behind the spread above.
+
+![Cell voltage of every cell in the stack](https://raw.githubusercontent.com/mman/node-red-contrib-pylontech-health/main/docs/pylontech_stack_voltage_spread_by_cell.png)
+
+Two extreme examples, from a single US3000C that was rebuilt from packs at different states of
+charge and is being top-balanced. The first is the same per-cell voltage timeline for a badly
+unbalanced module, with cells several hundred millivolts apart at the top of charge; the second is
+the `balancing` field of `pylontech/cell` over the same period, showing the BMS's passive balancer
+bleeding the high cells one by one.
+
+![Cell voltage of an unbalanced battery](https://raw.githubusercontent.com/mman/node-red-contrib-pylontech-health/main/docs/pylontech_cell_voltage.png)
 
 ![Passive cell balancing over time](https://raw.githubusercontent.com/mman/node-red-contrib-pylontech-health/main/docs/pylontech_cell_balancing.png)
 
@@ -224,9 +257,13 @@ Exit code is 0 on success, 1 if the port could not be opened or some batteries r
 Import `examples/pylontech-influx.json` (_Menu → Import → Examples → node-red-contrib-pylontech-health_).
 It wires an inject node every 60 s → **pylontech health** → **influxdb batch** (from
 [node-red-contrib-influxdb](https://flows.nodered.org/node/node-red-contrib-influxdb)), and a debug
-node on the second output.
+node on the second output. The node's status line shows the result of the last poll.
+
+![Example flow](https://raw.githubusercontent.com/mman/node-red-contrib-pylontech-health/main/docs/pylontech_health_node_red_flow.png)
 
 ### Configuration
+
+![Node configuration dialog](https://raw.githubusercontent.com/mman/node-red-contrib-pylontech-health/main/docs/pylontech_health_node_red_config.png)
 
 | option             | default         | meaning                                                                                                                                     |
 | ------------------ | --------------- | ------------------------------------------------------------------------------------------------------------------------------------------- |
