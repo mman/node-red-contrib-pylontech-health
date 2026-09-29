@@ -1,0 +1,120 @@
+{
+  "kind": "Panel",
+  "spec": {
+    "id": 6,
+    "title": "Pylotech Cell Temperature Delta of Battery to Stack",
+    "description": "",
+    "links": [],
+    "data": {
+      "kind": "QueryGroup",
+      "spec": {
+        "queries": [
+          {
+            "kind": "PanelQuery",
+            "spec": {
+              "query": {
+                "kind": "DataQuery",
+                "version": "v0",
+                "group": "influxdb",
+                "datasource": {
+                  "name": "datasource-influxdb"
+                },
+                "spec": {
+                  "alias": "$tag_battery_id",
+                  "query": "SELECT mean(\"temperature_delta\")\nFROM \"pylontech/battery\"\nWHERE $timeFilter\nGROUP BY time($__interval), \"battery_id\" fill(previous)",
+                  "rawQuery": true,
+                  "resultFormat": "time_series"
+                }
+              },
+              "refId": "A",
+              "hidden": false
+            }
+          }
+        ],
+        "transformations": [],
+        "queryOptions": {}
+      }
+    },
+    "vizConfig": {
+      "kind": "VizConfig",
+      "group": "state-timeline",
+      "version": "13.2.2",
+      "spec": {
+        "options": {
+          "mergeValues": true,
+          "showValue": "never",
+          "alignValue": "left",
+          "rowHeight": 0.9,
+          "legend": {
+            "showLegend": true,
+            "displayMode": "list",
+            "placement": "bottom"
+          },
+          "tooltip": {
+            "mode": "multi",
+            "sort": "none",
+            "hideZeros": false
+          }
+        },
+        "fieldConfig": {
+          "defaults": {
+            "custom": {
+              "lineWidth": 0,
+              "fillOpacity": 70,
+              "spanNulls": false,
+              "insertNulls": false,
+              "hideFrom": {
+                "tooltip": false,
+                "viz": false,
+                "legend": false
+              },
+              "axisPlacement": "auto"
+            },
+            "color": {
+              "mode": "thresholds"
+            },
+            "thresholds": {
+              "mode": "absolute",
+              "steps": [
+                {
+                  "value": null,
+                  "color": "semi-dark-blue"
+                },
+                {
+                  "value": -3,
+                  "color": "blue"
+                },
+                {
+                  "value": -2,
+                  "color": "light-blue"
+                },
+                {
+                  "value": -1,
+                  "color": "green"
+                },
+                {
+                  "value": 0,
+                  "color": "light-green"
+                },
+                {
+                  "value": 1,
+                  "color": "yellow"
+                },
+                {
+                  "value": 2,
+                  "color": "orange"
+                },
+                {
+                  "value": 3,
+                  "color": "red"
+                }
+              ]
+            },
+            "unit": "celsius"
+          },
+          "overrides": []
+        }
+      }
+    }
+  }
+}
