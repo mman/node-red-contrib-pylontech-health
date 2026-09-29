@@ -1,0 +1,136 @@
+{
+  "type": "table",
+  "title": "pylon> pwr",
+  "description": "Latest pylontech/battery point per battery, laid out like the console's `pwr` table. Values are SI (V, A, °C) instead of the console's mV / mA / m°C; Coulomb is the SOC percentage. Absent batteries are not stored and therefore not shown.",
+  "datasource": { "type": "influxdb" },
+  "targets": [
+    {
+      "refId": "A",
+      "datasource": { "type": "influxdb" },
+      "rawQuery": true,
+      "resultFormat": "table",
+      "query": "SELECT \"voltage\" AS \"Volt\", \"current\" AS \"Curr\", \"temperature\" AS \"Tempr\", \"temp_low\" AS \"Tlow\", \"temp_low_index\" AS \"Tlow.Id\", \"temp_high\" AS \"Thigh\", \"temp_high_index\" AS \"Thigh.Id\", \"volt_low\" AS \"Vlow\", \"volt_low_index\" AS \"Vlow.Id\", \"volt_high\" AS \"Vhigh\", \"volt_high_index\" AS \"Vhigh.Id\", \"base_state\" AS \"Base.St\", \"volt_state\" AS \"Volt.St\", \"curr_state\" AS \"Curr.St\", \"temp_state\" AS \"Temp.St\", \"soc\" AS \"Coulomb\", \"bv_state\" AS \"B.V.St\", \"bt_state\" AS \"B.T.St\", \"mos_temperature\" AS \"MosTempr\", \"mt_state\" AS \"M.T.St\" FROM \"pylontech/battery\" WHERE $timeFilter GROUP BY \"battery\", \"battery_id\" ORDER BY time DESC LIMIT 1"
+    }
+  ],
+  "transformations": [
+    { "id": "sortBy", "options": { "sort": [{ "field": "battery_id", "desc": false }] } },
+    {
+      "id": "organize",
+      "options": {
+        "excludeByName": { "battery_id": true },
+        "renameByName": { "battery": "Power" },
+        "indexByName": {
+          "Power": 0,
+          "Volt": 1,
+          "Curr": 2,
+          "Tempr": 3,
+          "Tlow": 4,
+          "Tlow.Id": 5,
+          "Thigh": 6,
+          "Thigh.Id": 7,
+          "Vlow": 8,
+          "Vlow.Id": 9,
+          "Vhigh": 10,
+          "Vhigh.Id": 11,
+          "Base.St": 12,
+          "Volt.St": 13,
+          "Curr.St": 14,
+          "Temp.St": 15,
+          "Coulomb": 16,
+          "Time": 17,
+          "B.V.St": 18,
+          "B.T.St": 19,
+          "MosTempr": 20,
+          "M.T.St": 21
+        }
+      }
+    }
+  ],
+  "options": {
+    "showHeader": true,
+    "cellHeight": "sm",
+    "footer": { "show": false, "reducer": ["sum"], "countRows": false, "fields": "" }
+  },
+  "fieldConfig": {
+    "defaults": {
+      "custom": { "align": "auto", "cellOptions": { "type": "auto" }, "inspect": false },
+      "color": { "mode": "thresholds" },
+      "thresholds": { "mode": "absolute", "steps": [{ "color": "text", "value": null }] }
+    },
+    "overrides": [
+      {
+        "matcher": { "id": "byRegexp", "options": "^(Volt|Vlow|Vhigh)$" },
+        "properties": [
+          { "id": "unit", "value": "volt" },
+          { "id": "decimals", "value": 3 }
+        ]
+      },
+      {
+        "matcher": { "id": "byName", "options": "Curr" },
+        "properties": [
+          { "id": "unit", "value": "amp" },
+          { "id": "decimals", "value": 2 },
+          {
+            "id": "thresholds",
+            "value": {
+              "mode": "absolute",
+              "steps": [
+                { "color": "orange", "value": null },
+                { "color": "text", "value": 0 },
+                { "color": "green", "value": 0.001 }
+              ]
+            }
+          },
+          { "id": "custom.cellOptions", "value": { "type": "color-text" } }
+        ]
+      },
+      {
+        "matcher": { "id": "byRegexp", "options": "^(Tempr|Tlow|Thigh|MosTempr)$" },
+        "properties": [
+          { "id": "unit", "value": "celsius" },
+          { "id": "decimals", "value": 1 }
+        ]
+      },
+      {
+        "matcher": { "id": "byName", "options": "Coulomb" },
+        "properties": [
+          { "id": "unit", "value": "percent" },
+          { "id": "decimals", "value": 0 }
+        ]
+      },
+      {
+        "matcher": { "id": "byName", "options": "Time" },
+        "properties": [{ "id": "unit", "value": "dateTimeAsIso" }]
+      },
+      {
+        "matcher": { "id": "byName", "options": "Base.St" },
+        "properties": [
+          {
+            "id": "mappings",
+            "value": [
+              { "type": "value", "options": { "Charge": { "color": "green", "index": 0 } } },
+              { "type": "value", "options": { "Dischg": { "color": "orange", "index": 1 } } },
+              { "type": "value", "options": { "Idle": { "color": "text", "index": 2 } } },
+              { "type": "regex", "options": { "pattern": ".*", "result": { "color": "red", "index": 3 } } }
+            ]
+          },
+          { "id": "custom.cellOptions", "value": { "type": "color-text" } }
+        ]
+      },
+      {
+        "matcher": { "id": "byRegexp", "options": "^(Volt|Curr|Temp|B\\.V|B\\.T|M\\.T)\\.St$" },
+        "properties": [
+          {
+            "id": "mappings",
+            "value": [
+              { "type": "value", "options": { "Normal": { "color": "green", "index": 0 } } },
+              { "type": "regex", "options": { "pattern": ".*", "result": { "color": "red", "index": 1 } } }
+            ]
+          },
+          { "id": "custom.cellOptions", "value": { "type": "color-text" } }
+        ]
+      }
+    ]
+  },
+  "gridPos": { "h": 8, "w": 24, "x": 0, "y": 0 }
+}
