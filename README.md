@@ -33,11 +33,24 @@ is what you would expect from the modules at the top and bottom of a rack.
 
 **Every cell of the stack.** `voltage` from `pylontech/cell`, one lane per cell, aliased
 `$tag_battery_id/$tag_cell_id` so the 90 lanes sort as B01/C01 … B06/C15. Full cells are orange,
-the mid-charge plateau is green, and the weak cells stand out as blue lanes when the stack is
-nearly empty: cells 4 and 7–11 of B03 and cell 11 of B06 drop below 3.15 V while their neighbours
-hold 3.2 V. This is the chart that tells you _which_ cell is behind the spread above.
+the mid-charge plateau is green, and when the stack is nearly empty a group of lanes in B03 and
+cell 11 of B06 turn blue: they rest just under 3.20 V while their neighbours hold 3.20–3.23 V.
+This is the chart that tells you _which_ cells are behind the spread above, but it has a catch:
+the colour steps are absolute, so a cell 8 mV under a boundary looks as bad as one 30 mV under it.
 
 ![Cell voltage of every cell in the stack](https://raw.githubusercontent.com/mman/node-red-contrib-pylontech-health/main/docs/pylontech_stack_voltage_spread_by_cell.png)
+
+**Every cell relative to its own battery.** `voltage_delta` from `pylontech/cell`, cell minus the
+mean of its module, in mV on a diverging scale: green within ±5 mV, blue below, yellow to red
+above. Same lanes and the same day as the chart above, and it reads differently. Most of the
+blue B03 lanes are only 5–10 mV under the mean and fade to pale blue at rest; the module's spread
+is really cells 1–3 sitting 20–30 mV _above_ everything else. Cell 8 of B03 and cell 11 of B06
+are the cells that are genuinely behind: blue at the bottom, and the last to fill at the top, where
+the short blue stripes at 16:00 and 14:30 mark the lowest cell of each module during absorption.
+Judge this chart at rest, after an hour or so of zero current; under load or during absorption a
+±30 mV band is normal for LFP.
+
+![Cell voltage delta to battery for every cell in the stack](https://raw.githubusercontent.com/mman/node-red-contrib-pylontech-health/main/docs/pylontech_stack_voltage_delta_by_cell.png)
 
 Two extreme examples, from a single US3000C that was rebuilt from packs at different states of
 charge and is being top-balanced. The first is the same per-cell voltage timeline for a badly
