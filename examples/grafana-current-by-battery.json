@@ -1,9 +1,9 @@
 {
   "kind": "Panel",
   "spec": {
-    "id": 109,
-    "title": "Pylontech Current by Battery",
-    "description": "Charge/discharge current of each battery (pylontech/battery current, positive = charging). Green is idle (within ±1 A). Orange to dark red is charging, deep red above 10 A; light to dark blue is discharging, deep blue below -10 A. Near the top of charge the modules that are still taking current are the ones still filling, the ones that have gone green are full and waiting; the same split at the bottom shows which modules are carrying the load.",
+    "id": 18,
+    "title": "Current by Battery",
+    "description": "",
     "links": [],
     "data": {
       "kind": "QueryGroup",
@@ -20,9 +20,9 @@
                   "name": "datasource-influxdb"
                 },
                 "spec": {
-                  "alias": "$tag_battery_id",
                   "query": "SELECT mean(\"current\")\nFROM \"pylontech/battery\"\nWHERE $timeFilter\nGROUP BY time($__interval), \"battery_id\" fill(previous)",
                   "rawQuery": true,
+                  "alias": "$tag_battery_id",
                   "resultFormat": "time_series"
                 }
               },
@@ -77,12 +77,12 @@
               "mode": "absolute",
               "steps": [
                 {
-                  "value": null,
-                  "color": "dark-blue"
+                  "color": "dark-blue",
+                  "value": null
                 },
                 {
-                  "value": -10,
-                  "color": "blue"
+                  "color": "blue",
+                  "value": -10
                 },
                 {
                   "value": -5,
@@ -114,8 +114,7 @@
                 }
               ]
             },
-            "unit": "amp",
-            "decimals": 1
+            "unit": "amp"
           },
           "overrides": []
         }
