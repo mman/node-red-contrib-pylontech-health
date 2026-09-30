@@ -1,7 +1,7 @@
 {
   "kind": "Panel",
   "spec": {
-    "id": 10,
+    "id": 1010,
     "title": "pylon> pwr",
     "description": "Latest pylontech/battery point per battery, laid out like the console's `pwr` table. Values are SI (V, A, °C) instead of the console's mV / mA / m°C; Coulomb is the SOC percentage. Absent batteries are not stored and therefore not shown.",
     "links": [],
