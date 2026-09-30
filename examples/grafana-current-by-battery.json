@@ -81,36 +81,40 @@
                   "value": null
                 },
                 {
-                  "color": "blue",
+                  "color": "semi-dark-blue",
                   "value": -10
                 },
                 {
-                  "value": -5,
-                  "color": "light-blue"
+                  "color": "blue",
+                  "value": -5
                 },
                 {
-                  "value": -2,
-                  "color": "super-light-blue"
+                  "color": "light-blue",
+                  "value": -2
                 },
                 {
-                  "value": -1,
-                  "color": "green"
+                  "color": "super-light-blue",
+                  "value": -1
                 },
                 {
-                  "value": 1,
-                  "color": "super-light-orange"
+                  "value": 0,
+                  "color": "light-green"
                 },
                 {
-                  "value": 2,
-                  "color": "orange"
+                  "color": "super-light-orange",
+                  "value": 1
                 },
                 {
-                  "value": 5,
-                  "color": "red"
+                  "color": "orange",
+                  "value": 2
                 },
                 {
-                  "value": 10,
-                  "color": "dark-red"
+                  "color": "red",
+                  "value": 5
+                },
+                {
+                  "color": "dark-red",
+                  "value": 10
                 }
               ]
             },
