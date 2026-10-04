@@ -1,0 +1,108 @@
+help
+@
+
+disp       - Display Info at regular intervals - disp [(pwrs pwrNo)/val]/[(bats batNo)/volt/curr/temp]
+soxinfo    - soxinfo[1/0]
+bat        - Battery data show - bat [pwr][index]
+
+ci         - Current Comm Info
+ct         - Track Comm Port Data [Port Number]
+datac      - datac [warn0/warn1/warn2/perday/permon/peryear]
+datalist   - datalist [show/showt/clear/save] <warn0/warn1/warn2/perday/permon/peryear> <index> <0/1>
+getpwr     - Get power Info - getpwr
+help       - help
+log        - Log information show - log
+pwr        - Power data show - pwr [index]
+stat       - Statistic data show - stat/stat [detail]
+statc      - Clear statistic - statc
+pwrsys     - power system info display
+currcal    - current calibration - currcal [val] - currcal
+voltcal    - Voltage calibration - - voltcal
+dbg        - Debug - dbg [en] 0/1
+trst       - Test Soft Reset - trst
+shut       - Shut down - shut
+euro       - dsplay Euro stat list - euro
+updata     - updata system - updata
+config     - config [pov/povr/phv/phvr/plv/plvr/puv/puvr/pslp/bov/bovr/bhv/bhvr/blv/blvr/buv/buvr/bslp
+                                     /cot2/cot/cotr/cht/chtr/clt/cltr/cut/cutr/dot2/dot/dotr/dht/dhtr/dlt/dltr/dut/dutr/mot/motr
+                                     /cocp/coc/coca/cocar/docp/doc/doca/docar/oc2d/ocpd/ocd/oc2r/ocr/scd/scr
+prot       - Protect ctrl - prot [bov/bhv/blv/buv/bslp/pov/phv/plv/puv/pslp/cbot2/cbot/cbht/cblt/cbut/dbot2/dbot/dbht/dblt/dbut/coca/coc/coc2/doca/doc/bpvmf/default][en/dis]
+setprt     - set protocol type - setprt [sma/lg]
+setlowcfg  - set Low config- setlowcfg [save] / [shutvolt/vtime] [num]
+lg         - LG State - lg [cstm/sys][en/dis]
+setstccorrtime - Set stc corr time Threshold - setstccorrtime [val]
+setallsocparams - Set all soc params - setallsocparams[socindicator][socmin][socavg][socmax][socdisp]
+showsoxinfo - Show SOX Cal Info - showsoxinfo
+setpwrcurr - set power current - setpwrcurr [0/1][currval],0:dis,1:en
+info       - Device infomation - info
+tbar       - Test write Barcode - tbar[reg]
+ctrl       - Contrl IO - ctrl [cfet/dfet/afuse/mostest/wifi] [on/off]
+bmicrdcomm - BMIC read comm - bmicrdcomm [total_ic]
+bmicrdcfg  - BMIC read cfg - bmicrdcfg [total_ic]
+eepe       - EEPROM erase - eepe [chip]
+eepr       - EEPROM read - eepr [chip][Offset][size]
+eepw       - EEPROM write - eepw [chip][Offset][Val][size]
+flae       - Extend flash erase - flae [chip]
+flar       - Extend flash read - flar [chip][Offset][size]
+flaw       - Extend flash write - flaw [chip][Offset][Val]
+logc       - Log clear - logc
+logt       - Log test - logt [data]
+md         - Memory dump - md [width][Addr][size]
+mm         - Memory set - mm [width][Addr][Val]
+tsoftdsg   - Test Soft DSG - tsoftdsg
+tbuz       - Test Buzzer - tbuz
+tchgc      - test Charge current - tchgc[curr][currLimit]
+tclear     - test clear record on chip- tclear
+
+tibcio     - Test ibc io - tibcio [nc/sc]
+taddrio    - Test addr io - taddrio [nc/sc]
+tcbnio     - Test cbn io - tcbnio [nc/sc]
+tcan       - Test can port - tcan [port#]
+tdisc      - test discharge current - tdisc[curr][currLimit]
+teepr      - Device EEPROM test - teepr
+tetmp      - test enviroment temperature - tetmp
+tflash     - Device Flash test - tflash
+ti2c       - I2C test - ti2c
+tsoc       - bq34z100 test - tsoc
+time       - Time - time [year] [month] [day] [hour] [minute] [second]
+tinput     - test input state - tinput [rv/dcov/absent/present]
+tled       - Test Led - tled [0/lednum/on/off] [on/off]
+tmos       - test mosfet - tmos [cfet/dfet]
+tmprctrl   - Bat tmpr ctrl - tmprctrl [flag]/[flag][batid][val]
+
+tusart     - Usart test - tusart
+ttmp       - test battery temperature - ttmp
+sdctshut   - shield dryct shut - sdctshut[1/0]
+tdct       - Test dry ct - tdct
+tbld       - Test bleeding - tbld [val]
+tpwrvolt   - test pwr voltage - tpwrvolt
+tvolt      - test battery voltage - tvolt
+twdg       - Stop feeding watchdog - wdg
+emptyvolt  - Set empty volt - emptyvolt [val]
+blocksoc   - set block soc - blocksoc [val]
+totalcoul  - Set total coul - totalcoul [val]
+urates     - Set R485 Port Rate - urates [500000/115200/9600]
+tagevolt   - test age volt
+trdagevolt - read age volt
+inar       - INA226 SOC read - socr[Offset]
+inaw       - INA226 SOC write - socw [Offset][Val]
+inash      - INA226 SOC show reg -socsh
+inacal     - INA226 current calibration - currcal [val] - currcal
+setsoc     - Set SOC - setsoc [val]
+setsoh     - Set SOH - setsoh [val]
+setcycle   - Set cycle times - setcycle [val]
+topen      - open wire show - topen
+twifi      - test wifi rs485 - twifi
+afuse      - ctrl afuse blown on/off - afuse [on/off]
+clrfault   - clear fault - clrfault [iec]
+togpro     - toggle pylon rs485 protocol - togpro
+autoswitch - ctrl auto-switching enable/disable - autoswitch [1/0]
+dyprot     - ctrl dynamic protection enable/disable - dyprot [1/0]
+tdip       - Test Dip - tdip [flag]
+setprodate - setprodate - setprodate [year] [month] [day] [hour] [minute] [second]
+eoldis     - EOL protect disable - eoldis
+trace      - Read traces = trace [print/clear/level/default]/[>>/!]/[module name] [level]
+record     - Read records = record [clear]
+Command completed successfully
+$$
+pylon_debug>

@@ -1,0 +1,23 @@
+pwr
+@
+
+Power Volt   Curr   Tempr  Tlow   Tlow.Id  Thigh  Thigh.Id Vlow   Vlow.Id  Vhigh  Vhigh.Id Base.St  Volt.St  Curr.St  Temp.St  Coulomb  Time                 B.V.St   B.T.St   MosTempr M.T.St  
+1     49678  -5095  31800  30000  5        30700  0        3309   14       3313   1        Dischg   Normal   Normal   Normal   84%      2026-10-04 21:03:41  Normal   Normal   35200    Normal  
+2     49703  -4863  31500  30200  5        30900  5        3311   14       3315   5        Dischg   Normal   Normal   Normal   84%      2026-10-04 21:03:40  Normal   Normal   32100    Normal  
+3     49658  -4207  30400  29200  10       29600  5        3308   3        3314   2        Dischg   Normal   Normal   Normal   75%      2026-10-04 21:03:40  Normal   Normal   29400    Normal  
+4     49675  -5138  30000  29200  0        29400  5        3311   0        3312   2        Dischg   Normal   Normal   Normal   74%      2026-10-04 21:03:40  Normal   Normal   29100    Normal  
+5     49686  -5080  29500  28300  10       28600  0        3312   1        3313   0        Dischg   Normal   Normal   Normal   78%      2026-10-04 21:03:40  Normal   Normal   28500    Normal  
+6     49667  -3915  28800  27000  10       27400  5        3309   8        3312   0        Dischg   Normal   Normal   Normal   76%      2026-10-04 21:03:40  Normal   Normal   27800    Normal  
+7     -      -      -      -      -        -      -        Absent -        -      -        -        -        -        -        -        -                    -        -        -        -       
+8     -      -      -      -      -        -      -        Absent -        -      -        -        -        -        -        -        -                    -        -        -        -       
+9     -      -      -      -      -        -      -        Absent -        -      -        -        -        -        -        -        -                    -        -        -        -       
+10    -      -      -      -      -        -      -        Absent -        -      -        -        -        -        -        -        -                    -        -        -        -       
+11    -      -      -      -      -        -      -        Absent -        -      -        -        -        -        -        -        -                    -        -        -        -       
+12    -      -      -      -      -        -      -        Absent -        -      -        -        -        -        -        -        -                    -        -        -        -       
+13    -      -      -      -      -        -      -        Absent -        -      -        -        -        -        -        -        -                    -        -        -        -       
+14    -      -      -      -      -        -      -        Absent -        -      -        -        -        -        -        -        -                    -        -        -        -       
+15    -      -      -      -      -        -      -        Absent -        -      -        -        -        -        -        -        -                    -        -        -        -       
+16    -      -      -      -      -        -      -        Absent -        -      -        -        -        -        -        -        -                    -        -        -        -       
+Command completed successfully
+$$
+pylon_debug>

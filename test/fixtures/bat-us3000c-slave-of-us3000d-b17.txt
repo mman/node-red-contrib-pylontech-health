@@ -1,0 +1,22 @@
+bat 2
+@
+
+Battery  Volt     Curr     Tempr    Base State   Volt. State  Curr. State  DTemp. State CTemp. State SOC          Coulomb          BAL         
+0        3314     -4790    30900    Dischg       Normal       Normal       Normal       Normal       84%          62300        mAH N     
+1        3314     -4790    30900    Dischg       Normal       Normal       Normal       Normal       84%          62300        mAH N     
+2        3312     -4790    30900    Dischg       Normal       Normal       Normal       Normal       84%          62300        mAH N     
+3        3313     -4790    30900    Dischg       Normal       Normal       Normal       Normal       84%          62300        mAH N     
+4        3313     -4790    30900    Dischg       Normal       Normal       Normal       Normal       84%          62300        mAH N     
+5        3313     -4790    30200    Dischg       Normal       Normal       Normal       Normal       84%          62300        mAH N     
+6        3314     -4790    30200    Dischg       Normal       Normal       Normal       Normal       84%          62300        mAH N     
+7        3315     -4790    30200    Dischg       Normal       Normal       Normal       Normal       84%          62300        mAH N     
+8        3310     -4790    30200    Dischg       Normal       Normal       Normal       Normal       84%          62300        mAH N     
+9        3311     -4790    30200    Dischg       Normal       Normal       Normal       Normal       84%          62300        mAH N     
+10       3314     -4790    30500    Dischg       Normal       Normal       Normal       Normal       84%          62300        mAH N     
+11       3314     -4790    30500    Dischg       Normal       Normal       Normal       Normal       84%          62300        mAH N     
+12       3311     -4790    30500    Dischg       Normal       Normal       Normal       Normal       84%          62300        mAH N     
+13       3313     -4790    30500    Dischg       Normal       Normal       Normal       Normal       84%          62300        mAH N     
+14       3312     -4790    30500    Dischg       Normal       Normal       Normal       Normal       84%          62300        mAH N     
+Command completed successfully
+$$
+pylon_debug>
