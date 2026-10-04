@@ -94,8 +94,8 @@ All numeric fields are SI (volts, amps, °C, Ah). `chain` / `battery` follow the
 "Chain X · Battery Y" naming, `battery` being the 1-based position in the stack (the same `N` you'd
 pass to `bat N`). `barcode` is the battery's serial from `info N`, so a module keeps its history if
 it is moved to another slot. `coulomb` is omitted when the firmware prints a zero counter next to a
-non-zero SOC, which a US3000D master does for every cell of its slave batteries (only the master
-reports a real Ah figure). `cell_voltage_spread` (max − min cell voltage of a module) is the
+non-zero SOC, which a US3000D master on firmware 1.1 does for every cell of its slave batteries
+(firmware 1.4 relays the slaves' real Ah figures). `cell_voltage_spread` (max − min cell voltage of a module) is the
 number to alarm on; `cell_temperature_spread` is its temperature twin. **Spread** fields are one
 number per group, max minus min, always ≥ 0. **Delta** fields are one signed number per member,
 member minus the group mean, so they show which cell or battery is off and in which direction.
@@ -227,7 +227,7 @@ Cerbo's ARMv7 glibc inside the npm tarball. No compiler or extra download is nee
 only requires internet access to the npm registry and a little free space on `/data`.
 
 Deploy the node with the default port `/dev/ttyPYLON`: a green **ready** status means the battery
-answered with its `pylon>` prompt.
+answered with its `pylon>` prompt (`pylon_debug>` on US3000D firmware 1.4).
 
 ### 6. After a reboot or a Venus OS firmware update
 
@@ -341,7 +341,7 @@ If a poll fails, output 2 carries `payload: null` and `msg.error` with the reaso
 ### Status
 
 - yellow ring — connecting
-- green dot `ready` — console answered with `pylon>`
+- green dot `ready` — console answered with its prompt (`pylon>` or `pylon_debug>`)
 - blue dot `polling 1/2 · bat 1` — poll in progress
 - green dot `2 batt · 30 cells · 3.2s` — last poll OK (yellow if some batteries had errors)
 - red ring — cannot open the port or the port disappeared; retries with back-off (5 s → 60 s)
@@ -378,13 +378,17 @@ Parsing is header-driven: columns are matched by name, so firmware variants with
 `MosTempr`, `BAL`, extra columns, the split `DTemp. State` / `CTemp. State` pair, or the
 `Tlow.Id` / `Thigh.Id` / `Vlow.Id` / `Vhigh.Id` columns of a US3000D master work. Tested formats live
 in `test/fixtures`, including real captures from a US3000C on firmware B69.25.0.0 (which has `stat`
-but no `soh`) and the `pwr` of a US3000D master (firmware 1.1) heading a mixed US3000D/US3000C stack.
+but no `soh`) and from a US3000D master heading a mixed US3000D/US3000C stack, on firmware 1.1
+(Main Soft B1.4.0.0) and 1.4 (Main Soft B1.7.0.0).
 On the US3000D neither `info` nor `stat` takes a battery index (`info`, `stat [detail]`): the node
 notices the rejected `info N` / `stat N`, reads the bare command for the master instead, warns once
 and stops asking the slaves. So the `barcode` tag, the `firmware` field, `soh`, `cycle_count` and
 the other lifetime counters exist for battery 1 only, and its `stat` lacks power-on hours, the
-volt-diff maxima and the life warning/alarm counters. That firmware also has no `soh` command and
-does not relay the slaves' coulomb counters (see above). Long outputs that
+volt-diff maxima and the life warning/alarm counters. That firmware also has no `soh` command, and
+1.1 does not relay the slaves' coulomb counters (see above). Firmware 1.4 prints `pylon_debug>`
+instead of `pylon>` as its prompt, answers an empty line with `Unknown command`, and adds daily and
+lifetime charge/discharge energy counters to `stat` (`Day Chg Eng`, `His Dsg Eng`, …); these are
+kept in the raw `stat` map but not exported as fields, as their unit is undocumented. Long outputs that
 the console pages with _Press [Enter] to be continued_ are handled automatically. If your battery
 prints something the node does not understand, capture it with `msg.command = "pwr"`,
 `"info 1"`, `"bat 1"` and open an issue with the output.

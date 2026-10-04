@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import {
   assembleBattery,
+  bodyLines,
   cellStats,
   isNotPresent,
   isUnknownCommand,
@@ -343,6 +344,110 @@ describe('US3000D master (firmware 1.1) captures', () => {
     expect(() => parseStat(stat1)).toThrow(/No statistics/);
     expect(isUnknownCommand(fixture('info-us3000d.txt'))).toBe(false);
     expect(isUnknownCommand(fixture('help-us3000d.txt'))).toBe(false);
+  });
+});
+
+describe('US3000D master firmware 1.4 (B1.7.0.0, pylon_debug> prompt) captures', () => {
+  it('strips the pylon_debug> prompt like pylon>', () => {
+    const lines = bodyLines(fixture('info-us3000d-b17.txt'));
+    expect(lines[0]).toBe('info');
+    expect(lines.at(-1)).toBe('Console Port rate   : 115200');
+    expect(lines.some((l) => /pylon/.test(l))).toBe(false);
+    expect(bodyLines('@\r\nUnknown command\r\n$$\r\npylon_debug>')).toEqual(['Unknown command']);
+  });
+
+  it('parses info with the new version numbers', () => {
+    const info = parseInfo(fixture('info-us3000d-b17.txt'));
+    expect(info).toMatchObject({
+      deviceName: 'US3000D',
+      barcode: 'Y251121C8P160585',
+      firmware: {
+        board: 'NF4.E3',
+        main: 'B1.7.0.0',
+        soft: 'V1.4',
+        boot: 'V0.02',
+        comm: 'V2.0',
+        releaseDate: '26-08-17',
+      },
+    });
+  });
+
+  it('parses pwr for the whole six-battery stack', () => {
+    const rows = parsePwr(fixture('pwr-us3000d-b17.txt'));
+    expect(rows.map((r) => r.position)).toEqual([1, 2, 3, 4, 5, 6]);
+    expect(rows[0]).toMatchObject({
+      voltage: 49.678,
+      current: -5.095,
+      temperature: 31.8,
+      tempLow: 30,
+      tempLowCell: 5,
+      tempHigh: 30.7,
+      tempHighCell: 0,
+      voltLow: 3.309,
+      voltLowCell: 14,
+      voltHigh: 3.313,
+      voltHighCell: 1,
+      soc: 84,
+      time: '2026-10-04 21:03:41',
+      mosTemperature: 35.2,
+    });
+    expect(rows[0]!.states).toMatchObject({
+      base: 'Dischg',
+      bv: 'Normal',
+      bt: 'Normal',
+      mt: 'Normal',
+    });
+    expect(rows[5]!.soc).toBe(76);
+  });
+
+  it('parses bat of the master and of a slave, which now reports its coulomb counter', () => {
+    const master = parseBat(fixture('bat-us3000d-b17.txt'));
+    expect(master).toHaveLength(15);
+    expect(master[0]).toMatchObject({
+      index: 0,
+      voltage: 3.309,
+      current: -4.99,
+      temperature: 30.7,
+      soc: 84,
+      coulombAh: 62.6,
+      balancing: false,
+    });
+    expect(master[0]!.states).toEqual({
+      base: 'Dischg',
+      volt: 'Normal',
+      curr: 'Normal',
+      temp: 'Normal',
+      dtemp: 'Normal',
+      ctemp: 'Normal',
+    });
+    const slave = parseBat(fixture('bat-us3000c-slave-of-us3000d-b17.txt'));
+    expect(slave).toHaveLength(15);
+    expect(slave[0]).toMatchObject({ voltage: 3.314, current: -4.79, soc: 84, coulombAh: 62.3 });
+  });
+
+  it('parses the bare stat and keeps the new energy counters in raw', () => {
+    const st = parseStat(fixture('stat-us3000d-b17.txt'));
+    expect(st).toMatchObject({ soh: 100, cycles: 74, shutdowns: 8, resets: 1 });
+    expect(st.powerOnHours).toBeUndefined();
+    expect(st.raw).toMatchObject({
+      'Power on Times': '15',
+      'Dsg Cap': '640009',
+      'Day Chg Eng': '4',
+      'Day Dsg Eng': '79448',
+      'His Chg Eng': '34779023',
+      'His Dsg Eng': '31425921',
+      'Rate Eng': '36',
+    });
+    expect(() => parseStat(fixture('stat-detail-us3000d-b17.txt'))).toThrow(/No statistics/);
+  });
+
+  it('still rejects info N / stat N / soh N', () => {
+    expect(isUnknownCommand(fixture('info-1-rejected-us3000d-b17.txt'))).toBe(true);
+    expect(isUnknownCommand(fixture('stat-1-rejected-us3000d-b17.txt'))).toBe(true);
+    expect(isUnknownCommand(fixture('soh-unsupported-us3000d-b17.txt'))).toBe(true);
+    expect(isUnknownCommand(fixture('help-us3000d-b17.txt'))).toBe(false);
+    expect(isUnknownCommand(fixture('stat-us3000d-b17.txt'))).toBe(false);
+    expect(() => parseInfo(fixture('info-1-rejected-us3000d-b17.txt'))).toThrow(/not supported/);
   });
 });
 

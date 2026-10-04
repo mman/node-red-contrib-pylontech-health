@@ -208,6 +208,34 @@ describe('pollStack stat handling', () => {
     expect(r.batteries[1]!.stat).toBeUndefined();
   });
 
+  it('polls a US3000D firmware 1.4 stack: master-only info/stat, slaves with coulomb', async () => {
+    const { fn, log } = commandFn({
+      pwr: fixture('pwr-us3000d-b17.txt'),
+      'info 1': fixture('info-1-rejected-us3000d-b17.txt'),
+      info: fixture('info-us3000d-b17.txt'),
+      'stat 1': fixture('stat-1-rejected-us3000d-b17.txt'),
+      stat: fixture('stat-us3000d-b17.txt'),
+      'bat 1': fixture('bat-us3000d-b17.txt'),
+      'bat 2': fixture('bat-us3000c-slave-of-us3000d-b17.txt'),
+      'bat 3': fixture('bat-us3000c-slave-of-us3000d-b17.txt'),
+      'bat 4': fixture('bat-us3000c-slave-of-us3000d-b17.txt'),
+      'bat 5': fixture('bat-us3000c-slave-of-us3000d-b17.txt'),
+      'bat 6': fixture('bat-us3000c-slave-of-us3000d-b17.txt'),
+    });
+    const r = await pollStack(fn, base());
+    expect(log.slice(0, 7)).toEqual(['pwr', 'info 1', 'info', 'stat 1', 'stat', 'bat 1', 'bat 2']);
+    expect(log.filter((c) => /^(info|stat)/.test(c))).toHaveLength(4);
+    expect(r.errors).toEqual([]);
+    expect(r.batteries).toHaveLength(6);
+    expect(r.infoMasterOnly).toBe(true);
+    expect(r.statMasterOnly).toBe(true);
+    expect(r.batteries[0]!.info?.firmware.main).toBe('B1.7.0.0');
+    expect(r.batteries[0]!.stat?.cycles).toBe(74);
+    expect(r.batteries[1]!.info).toBeUndefined();
+    expect(r.batteries[1]!.cells[0]!.coulombAh).toBe(62.3);
+    expect(r.batteries[0]!.cellStats?.count).toBe(15);
+  });
+
   it('asks only the bare info and stat once the master-only flags are known', async () => {
     const { fn, log } = commandFn({
       info: fixture('info-us3000d.txt'),
