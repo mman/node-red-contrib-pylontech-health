@@ -7,7 +7,9 @@
  */
 import type { Battery, BatteryInfo, BatteryStat, Cell, CellStats, PowerRow } from './model.js';
 
-const NOISE_LINES = new Set(['@', '$$', 'pylon>']);
+const NOISE_LINES = new Set(['@', '$$']);
+/** A `pylon>` / `pylon_debug>` prompt, alone or with the echoed command behind it. */
+const PROMPT_LINE_RE = /^pylon\w*>/;
 /** `Command completed successfully`, with or without the US3000D's exclamation mark. */
 const COMPLETED_RE = /^Command completed successfully!?$/;
 
@@ -57,7 +59,7 @@ export function bodyLines(raw: string): string[] {
     .filter((l) => l.length > 0)
     .filter((l) => !NOISE_LINES.has(l))
     .filter((l) => !COMPLETED_RE.test(l))
-    .filter((l) => !/^pylon>/.test(l));
+    .filter((l) => !PROMPT_LINE_RE.test(l));
 }
 
 function normaliseHeader(line: string): string[] {

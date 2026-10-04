@@ -226,5 +226,23 @@ describe('runCli', () => {
       ]);
       expect(readFileSync(join(dir, 'bat-1.txt'), 'utf8')).toMatch(/pylon>$/);
     });
+
+    it('ends each file with the prompt the console actually printed', async () => {
+      dir = mkdtempSync(join(tmpdir(), 'pyl-'));
+      const r = run(['capture', dir, '--no-stat'], {
+        prompt: 'pylon_debug>',
+        responses: {
+          pwr: 'pwr-us3000d-b17.txt',
+          info: 'info-us3000d-b17.txt',
+          'info 1': 'info-1-rejected-us3000d-b17.txt',
+          'bat 1': 'bat-us3000d-b17.txt',
+        },
+      });
+      expect(await r.code).toBe(0);
+      expect(readFileSync(join(dir, 'pwr.txt'), 'utf8')).toMatch(/\$\$\r\npylon_debug>$/);
+      expect(readFileSync(join(dir, 'info.txt'), 'utf8')).toMatch(
+        /B1\.7\.0\.0[\s\S]*pylon_debug>$/,
+      );
+    });
   });
 });

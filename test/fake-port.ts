@@ -19,6 +19,8 @@ export interface FakePortOptions {
   openError?: Error;
   /** Commands whose output is paged: number of lines per page. */
   pageLines?: Record<string, number>;
+  /** Prompt the console prints (`pylon>` by default, `pylon_debug>` on US3000D firmware 1.4). */
+  prompt?: string;
 }
 
 const PAGER = 'Press [Enter] to be continued,other key to exit';
@@ -50,6 +52,10 @@ export class FakePort extends EventEmitter implements SerialLike {
   ) {
     super();
     this.baudRate = baudRate;
+  }
+
+  private get prompt(): string {
+    return this.opts.prompt ?? PROMPT;
   }
 
   open(cb?: (err: Error | null) => void): void {
@@ -104,7 +110,7 @@ export class FakePort extends EventEmitter implements SerialLike {
       const last = this.pending.length === 0;
       if (last) this.pending = undefined;
       queueMicrotask(() =>
-        this.emit('data', Buffer.from(page + (last ? PROMPT : PAGER), 'latin1')),
+        this.emit('data', Buffer.from(page + (last ? this.prompt : PAGER), 'latin1')),
       );
       return true;
     }
@@ -116,9 +122,10 @@ export class FakePort extends EventEmitter implements SerialLike {
     }
     const key = this.opts.responses?.[cmd] ?? DEFAULT_RESPONSES[cmd];
     let body: string;
-    if (cmd === '') body = '\r\n';
+    // Firmware 1.4 answers an empty line with "Unknown command"; older firmware just re-prompts.
+    if (cmd === '') body = this.opts.prompt ? '\r\n@\r\nUnknown command\r\n$$\r\n' : '\r\n';
     else if (key === undefined) body = `${cmd}\r\n@\r\nInvalid command\r\n$$\r\n`;
-    else body = key.endsWith('.txt') ? fixture(key).replace(/pylon>$/, '') : key;
+    else body = key.endsWith('.txt') ? fixture(key).replace(/pylon\w*>$/, '') : key;
     const perPage = this.opts.pageLines?.[cmd];
     if (perPage) {
       const lines = body.split(/(?<=\n)/);
@@ -135,7 +142,7 @@ export class FakePort extends EventEmitter implements SerialLike {
       // Deliver in two chunks to exercise buffering.
       const mid = Math.floor(body.length / 2);
       this.emit('data', Buffer.from(body.slice(0, mid), 'latin1'));
-      this.emit('data', Buffer.from(body.slice(mid) + PROMPT, 'latin1'));
+      this.emit('data', Buffer.from(body.slice(mid) + this.prompt, 'latin1'));
     };
     if (this.opts.latencyMs) setTimeout(respond, this.opts.latencyMs);
     else queueMicrotask(respond);

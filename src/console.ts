@@ -2,7 +2,8 @@
  * Prompt-driven serial console client for Pylontech batteries.
  *
  * - Opens the port, optionally performs the 1200-baud wake sequence that
- *   switches the console to 115200 baud, then probes for the `pylon>` prompt.
+ *   switches the console to 115200 baud, then probes for the prompt (`pylon>`, or
+ *   `pylon_debug>` on US3000D firmware 1.4).
  * - Serialises commands: one in flight at a time, each resolved when the
  *   prompt reappears or rejected on timeout.
  * - Emits `close` when the port goes away and `error` for transport errors.
@@ -12,7 +13,10 @@ import { setTimeout as delay } from 'node:timers/promises';
 
 export const WAKE_SEQUENCE = '~20014682C0048520FCC3\r';
 export const WAKE_BAUD = 1200;
+/** Prompt printed by most firmware; US3000D B1.4 prints `pylon_debug>`. See {@link PROMPT_RE}. */
 export const PROMPT = 'pylon>';
+/** Any `pylon…>` prompt. The console remembers the variant it saw in {@link PylontechConsole.prompt}. */
+export const PROMPT_RE = /pylon\w*>/g;
 /** Pager prompt printed by the console after a screenful of output. */
 export const PAGER_PROMPT = /Press \[Enter\] to be continued,\s*other key to exit\s*$/i;
 
@@ -70,6 +74,8 @@ export class PylontechConsole extends EventEmitter {
   private waiter: { resolve: (s: string) => void; touch: () => void } | undefined;
   private queue: Promise<unknown> = Promise.resolve();
   private closing = false;
+  /** The prompt text the console actually printed (`pylon>` until the first answer). */
+  prompt: string = PROMPT;
   readonly options: Required<Omit<ConsoleOptions, 'createPort'>> & { createPort: PortFactory };
 
   constructor(options: ConsoleOptions) {
@@ -174,10 +180,12 @@ export class PylontechConsole extends EventEmitter {
       this.port?.write('\n');
       return;
     }
-    const idx = this.buffer.lastIndexOf(PROMPT);
-    if (idx < 0) return;
-    if (this.buffer.slice(idx + PROMPT.length).trim().length > 0) return; // prompt not at the end
-    const body = this.buffer.slice(0, idx);
+    let match: RegExpExecArray | undefined;
+    for (const m of this.buffer.matchAll(PROMPT_RE)) match = m;
+    if (!match) return;
+    if (this.buffer.slice(match.index + match[0].length).trim().length > 0) return; // prompt not at the end
+    this.prompt = match[0];
+    const body = this.buffer.slice(0, match.index);
     const { resolve } = this.waiter;
     this.waiter = undefined;
     resolve(body);

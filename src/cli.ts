@@ -243,7 +243,7 @@ export async function runCli(argv: string[], io: CliIO, deps: CliDeps = {}): Pro
           const save = async (cmd: string) => {
             const raw = await con.command(cmd);
             const file = join(dir, `${cmd.replace(/\s+/g, '-')}.txt`);
-            writeFileSync(file, `${raw}pylon>`);
+            writeFileSync(file, `${raw}${con.prompt}`);
             saved.push(file);
             io.err(`  ${cmd} → ${file}`);
             return raw;

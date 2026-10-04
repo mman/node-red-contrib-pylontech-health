@@ -62,6 +62,31 @@ describe('PylontechConsole', () => {
     await con.close();
   });
 
+  it('accepts the pylon_debug> prompt of US3000D firmware 1.4 and remembers it', async () => {
+    const { con, port } = make({
+      prompt: 'pylon_debug>',
+      requireWake: true,
+      responses: { pwr: 'pwr-us3000d-b17.txt', bat: 'bat-us3000d-b17.txt' },
+    });
+    expect(con.prompt).toBe('pylon>');
+    await con.open();
+    expect(con.prompt).toBe('pylon_debug>');
+    const pwr = await con.command('pwr');
+    expect(pwr).toContain('Power Volt');
+    expect(pwr).not.toMatch(/pylon/);
+    expect(port().commands).toEqual(['', 'pwr']);
+    await con.close();
+  });
+
+  it('does not take "pylon" inside output for the prompt', async () => {
+    const { con } = make({ responses: { x: 'pylon_debug> is what the new firmware prints\r\n' } });
+    await con.open();
+    const out = await con.command('x');
+    expect(out).toContain('is what the new firmware prints');
+    expect(con.prompt).toBe('pylon>');
+    await con.close();
+  });
+
   it('times out a hung command with partial output and keeps working afterwards', async () => {
     const { con } = make({ silent: ['bat 3'] });
     await con.open();
