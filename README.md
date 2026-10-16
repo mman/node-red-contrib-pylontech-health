@@ -1,15 +1,40 @@
 # node-red-contrib-pylontech-health
 
-Node-RED node that reads **per-cell health data** from a Pylontech battery stack (US2000 / US3000 /
-UP2500 / US5000 / Force …) over the master battery's **console port** and emits ready-to-write
-**InfluxDB points**. Built to run inside Node-RED on a **Victron Cerbo GX** (Venus OS Large ≥ 3.80),
-but works on any Node-RED ≥ 3 with Node.js ≥ 22.
+## Why
 
-This package lets you assess the health of your Pylontech batteries by periodically collecting
-every important metric the BMS exposes on its console (per-cell voltage, current, temperature,
-SOC, balancing state, plus the per-battery and per-stack aggregates) and visualizing them over
-time in Grafana. The charts below come from a six-battery stack over one day: discharging through
-the evening, sitting at low SOC overnight, charging again in the morning.
+Pylontech's CAN bus interface reports a single SOC and one min/max cell voltage for the whole
+stack — enough for normal operation, but not enough to see what's happening inside each module.
+This project connects to the master battery's **console port** instead, which exposes every metric
+the BMS tracks: per-cell voltage, current, temperature, SOC, coulomb count, balancing state, and
+lifetime statistics — for every cell of every battery in the stack.
+
+With this data collected over time, you can:
+
+- **Identify weak cells before they cause alarms.** A cell losing capacity charges and discharges
+  faster than its neighbours. The voltage-delta-to-battery chart reveals these cells as persistent
+  outliers weeks before they trigger a high-voltage shutdown during a top-up charge.
+- **Track degradation across your stack.** Compare cell voltage spread, SOC drift between modules,
+  and per-battery temperature deltas over months to see which modules are aging and which are healthy.
+- **Build warranty evidence.** The console data — cell voltages, balancing events, BMS state flags,
+  cycle counts — is exactly what Pylontech asks for when evaluating a claim. Continuous logging
+  captures what a one-off snapshot cannot.
+- **React automatically.** The example DVCC charge taper flow reads the highest cell voltage and
+  reduces the charge current limit as it approaches the alarm threshold, preventing weak cells from
+  overshooting during DESS balancing charges — a closed loop from monitoring to protection.
+
+![DVCC charge taper flow](https://raw.githubusercontent.com/mman/node-red-contrib-pylontech-health/main/docs/dvcc_charge_taper_flow.png)
+
+## What
+
+A **Node-RED node** that periodically polls a Pylontech battery stack (US2000 / US3000 /
+UP2500 / US5000 / Force …) over the console port and emits ready-to-write **InfluxDB points**.
+Built to run inside Node-RED on a **Victron Cerbo GX** (Venus OS Large ≥ 3.80), but works on any
+Node-RED ≥ 3 with Node.js ≥ 22.
+
+## What it looks like
+
+The charts below come from a six-battery stack over one day: discharging through the evening,
+sitting at low SOC overnight, charging again in the morning.
 
 **State of charge by battery.** Stacked `soc` from `pylontech/battery`, one band per module. All
 six discharge and recharge together; a module that drifts away from the others here is the first
