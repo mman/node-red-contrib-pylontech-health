@@ -1,0 +1,191 @@
+[
+  {
+    "id": "dvcc-tab",
+    "type": "tab",
+    "label": "DVCC charge taper",
+    "disabled": true,
+    "info": "Tapers the DVCC charge current limit as the highest cell voltage\napproaches the alarm threshold. Prevents weak cells from overshooting\nduring DESS balancing charges that top up to 100%.\n\nSetup:\n1. Review MAX_AMPS and taper thresholds in the taper calc function\n   (your DVCC MaxChargeCurrent is currently 50 A — the flow will\n   override it dynamically between MIN_AMPS and MAX_AMPS)\n2. Enable this flow tab and deploy\n\nThe victron-output-ess node writes to the DVCC charge current limit\nat Settings/SystemSetup/MaxChargeCurrent. The victron-input-battery\nnodes read MaxCellVoltage and SOC from your Pylontech stack via the\nCAN bus data already on the Cerbo."
+  },
+  {
+    "id": "dvcc-comment",
+    "type": "comment",
+    "z": "dvcc-tab",
+    "name": "Reads Pylontech MaxCellVoltage via victron node, writes DVCC charge limit",
+    "info": "",
+    "x": 330,
+    "y": 60,
+    "wires": []
+  },
+  {
+    "id": "dvcc-soc-in",
+    "type": "victron-input-battery",
+    "z": "dvcc-tab",
+    "outputs": 1,
+    "service": "com.victronenergy.battery/512",
+    "path": "/Soc",
+    "serviceObj": {
+      "service": "com.victronenergy.battery/512",
+      "name": "Pylontech battery",
+      "communityTag": "battery"
+    },
+    "pathObj": {
+      "path": "/Soc",
+      "type": "float",
+      "name": "State of charge (%)"
+    },
+    "initial": "",
+    "name": "Battery SOC",
+    "onlyChanges": false,
+    "conditionalMode": false,
+    "condition1HysteresisEnabled": false,
+    "condition1HysteresisThreshold": "",
+    "outputTrue": "",
+    "outputFalse": "",
+    "debounce": "",
+    "x": 130,
+    "y": 140,
+    "wires": [["dvcc-soc-ctx"]]
+  },
+  {
+    "id": "dvcc-soc-ctx",
+    "type": "change",
+    "z": "dvcc-tab",
+    "name": "→ flow.soc",
+    "rules": [
+      { "t": "set", "p": "soc", "pt": "flow", "to": "payload", "tot": "msg" }
+    ],
+    "action": "",
+    "property": "",
+    "from": "",
+    "to": "",
+    "reg": false,
+    "x": 350,
+    "y": 140,
+    "wires": [[]]
+  },
+  {
+    "id": "dvcc-maxv-in",
+    "type": "victron-input-battery",
+    "z": "dvcc-tab",
+    "outputs": 1,
+    "service": "com.victronenergy.battery/512",
+    "path": "/System/MaxCellVoltage",
+    "serviceObj": {
+      "service": "com.victronenergy.battery/512",
+      "name": "Pylontech battery",
+      "communityTag": "battery"
+    },
+    "pathObj": {
+      "path": "/System/MaxCellVoltage",
+      "type": "float",
+      "name": "System; maximum cell voltage (V DC)"
+    },
+    "initial": "",
+    "name": "Max Cell Voltage",
+    "onlyChanges": false,
+    "conditionalMode": false,
+    "condition1HysteresisEnabled": false,
+    "condition1HysteresisThreshold": "",
+    "outputTrue": "",
+    "outputFalse": "",
+    "debounce": "",
+    "x": 140,
+    "y": 240,
+    "wires": [["dvcc-calc"]]
+  },
+  {
+    "id": "dvcc-calc",
+    "type": "function",
+    "z": "dvcc-tab",
+    "name": "taper calc",
+    "func": "var MAX_AMPS = 150;    // full rate (6 modules × 25 A)\nvar MIN_AMPS = 5;      // trickle while tapering\nvar START_MV = 3430;   // begin reducing current\nvar END_MV   = 3500;   // reach MIN_AMPS\n\nvar maxMV = Math.round(msg.payload * 1000);\nvar soc = flow.get(\"soc\");\n\nvar limit;\nif (maxMV <= START_MV) {\n    limit = MAX_AMPS;\n} else if (maxMV >= END_MV) {\n    limit = MIN_AMPS;\n} else {\n    var frac = (maxMV - START_MV) / (END_MV - START_MV);\n    limit = Math.round(MAX_AMPS - frac * (MAX_AMPS - MIN_AMPS));\n}\n\nvar tapering = limit < MAX_AMPS;\nvar label = maxMV + \"mV soc=\" + (soc != null ? soc : \"?\") + \"% \\u2192 \" + limit + \"A\";\nnode.status({\n    fill: tapering ? \"yellow\" : \"green\",\n    shape: tapering ? \"ring\" : \"dot\",\n    text: label\n});\n\nreturn [\n    { payload: limit },\n    { payload: label + (tapering ? \" TAPERING\" : \"\") }\n];",
+    "outputs": 2,
+    "timeout": "",
+    "noerr": 0,
+    "initialize": "",
+    "finalize": "",
+    "libs": [],
+    "x": 340,
+    "y": 240,
+    "wires": [["dvcc-rbe"], ["dvcc-debug-all"]],
+    "outputLabels": ["limit", "status"]
+  },
+  {
+    "id": "dvcc-rbe",
+    "type": "rbe",
+    "z": "dvcc-tab",
+    "name": "on change",
+    "func": "rbe",
+    "gap": "",
+    "start": "",
+    "inout": "out",
+    "septopics": false,
+    "property": "payload",
+    "topi": "topic",
+    "x": 550,
+    "y": 200,
+    "wires": [["dvcc-out", "dvcc-debug-act"]]
+  },
+  {
+    "id": "dvcc-out",
+    "type": "victron-output-ess",
+    "z": "dvcc-tab",
+    "outputs": 0,
+    "service": "com.victronenergy.settings",
+    "path": "/Settings/SystemSetup/MaxChargeCurrent",
+    "serviceObj": {
+      "service": "com.victronenergy.settings",
+      "name": "Venus settings",
+      "communityTag": "ess"
+    },
+    "pathObj": {
+      "path": "/Settings/SystemSetup/MaxChargeCurrent",
+      "type": "float",
+      "name": "DVCC Charge current limit (A)",
+      "mode": "both"
+    },
+    "name": "DVCC MaxChargeCurrent",
+    "onlyChanges": true,
+    "conditionalMode": false,
+    "condition1HysteresisEnabled": false,
+    "condition1HysteresisThreshold": "",
+    "outputTrue": "",
+    "outputFalse": "",
+    "debounce": "",
+    "x": 790,
+    "y": 160,
+    "wires": []
+  },
+  {
+    "id": "dvcc-debug-act",
+    "type": "debug",
+    "z": "dvcc-tab",
+    "name": "limit changes",
+    "active": false,
+    "tosidebar": true,
+    "console": false,
+    "complete": "payload",
+    "targetType": "msg",
+    "statusVal": "",
+    "statusType": "auto",
+    "x": 750,
+    "y": 240,
+    "wires": []
+  },
+  {
+    "id": "dvcc-debug-all",
+    "type": "debug",
+    "z": "dvcc-tab",
+    "name": "all evals",
+    "active": false,
+    "tosidebar": true,
+    "console": false,
+    "complete": "payload",
+    "targetType": "msg",
+    "statusVal": "",
+    "statusType": "auto",
+    "x": 540,
+    "y": 240,
+    "wires": []
+  }
+]
