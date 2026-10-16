@@ -22,7 +22,7 @@ With this data collected over time, you can:
   reduces the charge current limit as it approaches the alarm threshold, preventing weak cells from
   overshooting during DESS balancing charges — a closed loop from monitoring to protection.
 
-**Two rebuilt modules over seven days.** Each cell's voltage delta to its battery mean, on a
+**Example: two rebuilt modules over seven days.** Each cell's voltage delta to its battery mean, on a
 diverging mV scale. In B03, cells C01–C03 run persistently above the mean (yellow/orange/red)
 while C08–C09 sit below (blue) — they charge faster and discharge faster than the rest, a sign
 of reduced capacity. In B06, C11 shows the same pattern. Green cells are tracking the pack; the
