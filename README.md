@@ -13,15 +13,6 @@ With this data collected over time, you can:
 - **Identify weak cells before they cause alarms.** A cell losing capacity charges and discharges
   faster than its neighbours. The voltage-delta-to-battery chart reveals these cells as persistent
   outliers weeks before they trigger a high-voltage shutdown during a top-up charge.
-
-**Two rebuilt modules over seven days.** Each cell's voltage delta to its battery mean, on a
-diverging mV scale. In B03, cells C01–C03 run persistently above the mean (yellow/orange/red)
-while C08–C09 sit below (blue) — they charge faster and discharge faster than the rest, a sign
-of reduced capacity. In B06, C11 shows the same pattern. Green cells are tracking the pack; the
-coloured ones are the candidates that will eventually trigger alarms.
-
-![Weak cells identified by voltage delta](https://raw.githubusercontent.com/mman/node-red-contrib-pylontech-health/main/docs/pylontech_weak_cells_delta.png)
-
 - **Track degradation across your stack.** Compare cell voltage spread, SOC drift between modules,
   and per-battery temperature deltas over months to see which modules are aging and which are healthy.
 - **Build warranty evidence.** The console data — cell voltages, balancing events, BMS state flags,
@@ -30,6 +21,14 @@ coloured ones are the candidates that will eventually trigger alarms.
 - **React automatically.** The example DVCC charge taper flow reads the highest cell voltage and
   reduces the charge current limit as it approaches the alarm threshold, preventing weak cells from
   overshooting during DESS balancing charges — a closed loop from monitoring to protection.
+
+**Two rebuilt modules over seven days.** Each cell's voltage delta to its battery mean, on a
+diverging mV scale. In B03, cells C01–C03 run persistently above the mean (yellow/orange/red)
+while C08–C09 sit below (blue) — they charge faster and discharge faster than the rest, a sign
+of reduced capacity. In B06, C11 shows the same pattern. Green cells are tracking the pack; the
+coloured ones are the candidates that will eventually trigger alarms.
+
+![Weak cells identified by voltage delta](https://raw.githubusercontent.com/mman/node-red-contrib-pylontech-health/main/docs/pylontech_weak_cells_delta.png)
 
 ## What
 
