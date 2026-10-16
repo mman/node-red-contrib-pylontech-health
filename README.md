@@ -22,14 +22,22 @@ With this data collected over time, you can:
   reduces the charge current limit as it approaches the alarm threshold, preventing weak cells from
   overshooting during DESS balancing charges — a closed loop from monitoring to protection.
 
-![DVCC charge taper flow](https://raw.githubusercontent.com/mman/node-red-contrib-pylontech-health/main/docs/dvcc_charge_taper_flow.png)
-
 ## What
 
 A **Node-RED node** that periodically polls a Pylontech battery stack (US2000 / US3000 /
 UP2500 / US5000 / Force …) over the console port and emits ready-to-write **InfluxDB points**.
 Built to run inside Node-RED on a **Victron Cerbo GX** (Venus OS Large ≥ 3.80), but works on any
 Node-RED ≥ 3 with Node.js ≥ 22.
+
+**Data collection.** The node polls `pwr`, `bat N`, `info N` and `stat N` for every battery in the
+stack and produces cell, battery and stack measurements for InfluxDB.
+
+![Data collection flow](https://raw.githubusercontent.com/mman/node-red-contrib-pylontech-health/main/docs/pylontech_health_node_red_flow.png)
+
+**Charge current taper.** An example flow that reads the highest cell voltage via a Victron node
+and dynamically reduces the DVCC charge current limit as it approaches the alarm threshold.
+
+![DVCC charge taper flow](https://raw.githubusercontent.com/mman/node-red-contrib-pylontech-health/main/docs/dvcc_charge_taper_flow.png)
 
 ## What it looks like
 
