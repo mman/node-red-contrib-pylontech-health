@@ -163,6 +163,113 @@ export interface StackReading {
   infoMasterOnly?: boolean;
 }
 
+/**
+ * Address of a module as the CAN protocol reports it: group M, module N within the group.
+ * Pylontech prints it as four ASCII digits, e.g. `"0103"` = group 1, module 3.
+ */
+export interface CanModuleRef {
+  /** Group number, 1-based. */
+  group: number;
+  /** Module address within the group, 1-based; the master battery is 1. */
+  module: number;
+}
+
+/**
+ * Per-module values from the extended (29-bit) CAN responses. Every field is optional:
+ * the modules answer in four separate frames and a run may capture only some of them.
+ */
+export interface CanModuleReading extends CanModuleRef {
+  /** Volts. */
+  minCellVoltage?: number;
+  maxCellVoltage?: number;
+  /** max - min in volts, derived. */
+  cellVoltageSpread?: number;
+  /** Module terminal voltage in volts. */
+  voltage?: number;
+  /** Amps (negative = discharge). */
+  current?: number;
+  /** Degrees Celsius. */
+  minCellTemperature?: number;
+  maxCellTemperature?: number;
+  mosTemperature?: number;
+  bmsTemperature?: number;
+  /** Percent 0..100. */
+  soc?: number;
+  soh?: number;
+  /** Nameplate capacity of this module in Ah. */
+  nominalCapacity?: number;
+  /** Raw status / flag bitfields and error code from `0x4000004`. */
+  status?: number;
+  flag?: number;
+  errorCode?: number;
+  /** Names of the set status and flag bits, for display. */
+  statusBits?: string[];
+  flagBits?: string[];
+  serial?: string;
+  firmwareVersion?: string;
+}
+
+/** Stack-level values, all from the standard (11-bit) frames the battery broadcasts unasked. */
+export interface CanStackSummary {
+  manufacturer?: string;
+  model?: string;
+  firmwareVersion?: string;
+  hardwareVersion?: string;
+  /** Module count from `0x359` byte 4, and the `0x372` counters. */
+  moduleCount?: number;
+  modulesOnline?: number;
+  modulesOffline?: number;
+  modulesBlockingCharge?: number;
+  modulesBlockingDischarge?: number;
+  /** Volts, amps, degrees Celsius. */
+  voltage?: number;
+  current?: number;
+  temperature?: number;
+  /** Percent 0..100. */
+  soc?: number;
+  soh?: number;
+  minCellVoltage?: number;
+  maxCellVoltage?: number;
+  cellVoltageSpread?: number;
+  minCellTemperature?: number;
+  maxCellTemperature?: number;
+  /** Which module holds the extreme cell, from `0x374`..`0x377`. */
+  minVoltageModule?: CanModuleRef;
+  maxVoltageModule?: CanModuleRef;
+  minTemperatureModule?: CanModuleRef;
+  maxTemperatureModule?: CanModuleRef;
+  /** Installed capacity in Ah. */
+  installedCapacity?: number;
+  chargeVoltageLimit?: number;
+  chargeCurrentLimit?: number;
+  dischargeCurrentLimit?: number;
+  dischargeVoltageLimit?: number;
+  chargeEnabled?: boolean;
+  dischargeEnabled?: boolean;
+  /** Names of the active protection, warning and alarm bits. */
+  protections: string[];
+  warnings: string[];
+  alarms: string[];
+}
+
+/** One `can-probe` run. */
+export interface CanStackReading {
+  /** SocketCAN interface the frames were read from, e.g. `can1`. */
+  interface: string;
+  polledAt: Date;
+  durationMs: number;
+  stack: CanStackSummary;
+  /** Populated only when extended responses were seen, i.e. after a request was sent. */
+  modules: CanModuleReading[];
+  /** How many frames of each id arrived, keyed by the id as hex. */
+  frameCounts: Record<string, number>;
+  /** Number of extended (29-bit) frames seen; zero unless something requested them. */
+  extendedFrames: number;
+  /** Ids we have no definition for, as hex, so new firmware shows up instead of being hidden. */
+  unknownFrames: string[];
+  errors: string[];
+}
+
 /** Point shape accepted by node-red-contrib-influxdb "influxdb batch" nodes. */
 export interface InfluxPoint {
   measurement: string;
