@@ -434,6 +434,24 @@ the console pages with _Press [Enter] to be continued_ are handled automatically
 prints something the node does not understand, capture it with `msg.command = "pwr"`,
 `"info 1"`, `"bat 1"` and open an issue with the output.
 
+## The CAN bus as an alternative
+
+The console cable is the only source of per-cell data, but the BMS-Can bus does carry useful
+module-level health, and reading it needs no cable, no root and no conflict with Venus OS' own
+`can-bus-bms` driver. `pylontech-health can-probe --interface can1` decodes what is on the bus:
+
+```sh
+pylontech-health can-probe --interface can1 --duration 8
+```
+
+What CAN will not give you is individual cell voltages, temperatures or balancing flags — at
+best the minimum and maximum within each module. The per-module frames are also request-only,
+so they appear on the bus just if something transmits a `0x4000000` request; `can-probe` does
+that only behind the explicit `--request` flag.
+
+See [docs/can-bus.md](docs/can-bus.md) for the frame tables, the parts of this that Venus OS
+already publishes on D-Bus for free, and the open questions about transmitting on a live bus.
+
 ## Development
 
 ```sh
